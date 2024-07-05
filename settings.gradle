@@ -1,0 +1,4 @@
+rootProject.name = 'JposScannerDriver'
+include 'JposDriver'
+include 'DriverTest'
+
