@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE JposEntries PUBLIC "-//JavaPOS//DTD//EN"
+        "jpos/res/jcl.dtd">
+<JposEntries>
+    <JposEntry logicalName="Neo-Fox-SD">
+        <creation factoryClass="java.Scanner.ScannerInstanceFactory"
+                  serviceClass="jpos.Scanner.ScannerService"/>
+        <vendor name="QM" url="https://neokkt.com/neo_fox_sd"/>
+        <jpos category="Scanner" version="1.14"/>
+        <product description="Handheld corded scanner" name="Neo Fox SD QM" url="https://neokkt.com/neo_fox_sd"/>
+        <prop name="autoSearchCOM" type="String" value="True"/>
+        <prop name="baudRate" type="String" value="9600"/>
+        <prop name="dataSuffix" type="String" value=""/>
+
+    </JposEntry>

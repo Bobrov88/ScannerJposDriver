@@ -7,7 +7,7 @@ public class MyLogger {
     private static Logger logger = null;
     static public Logger createLoggerInstance(String className) {
         logger = LogManager.getLogger(className);
-        System.setProperty("log4j.configurationFile", "file:./logging.properties");
+        System.setProperty("log4j.configurationFile", "logging.properties");
         return logger;
     }
 
