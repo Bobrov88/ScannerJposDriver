@@ -9,13 +9,14 @@ import jpos.services.ScannerService114;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.lang.reflect.Method;
+
 public class ScannerService implements ScannerService114 {
     private static final Logger logger = LogManager.getLogger(ScannerService.class.getName());
     private int commPortNumber;
     private int state = JposConst.JPOS_S_CLOSED;
     private EventCallbacks callBack;
     private ScannerSerialThread internalThread = null;
-
     private boolean claimed = false;
 
     public void setCommPortNumber(int pCommPortNumber) throws JposException {

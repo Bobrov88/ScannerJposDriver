@@ -8,6 +8,7 @@ import jpos.config.JposEntry.Prop;
 import jpos.loader.JposServiceInstance;
 import jpos.loader.JposServiceInstanceFactory;
 import org.apache.logging.log4j.Logger;
+import jpos.Scanner;
 
 public final class ScannerInstanceFactory implements JposServiceInstanceFactory {
 
@@ -20,9 +21,7 @@ public final class ScannerInstanceFactory implements JposServiceInstanceFactory 
     public JposServiceInstance createInstance(String paramString, JposEntry paramJposEntry) throws JposException {
 
         logger.debug("Creating instance of scanner");
-
-//        JposServiceInstance localJposServiceInstance = null;
-
+//         JposServiceInstance localJposServiceInstance = null;
 //        try {
 //            Class<?> localClass = Class.forName("java.scanner.ScannerService");
 //            localJposServiceInstance = (JposServiceInstance) localClass.getDeclaredConstructor().newInstance();

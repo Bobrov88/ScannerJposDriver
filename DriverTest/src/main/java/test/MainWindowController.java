@@ -53,9 +53,13 @@ public class MainWindowController {
     @FXML
     void initialize() {
         ClaimID.setDisable(true);
+        ReleaseID.setDisable(true);
         List<String> values = extractLogicalName();
         DeviceListId.setItems(FXCollections.observableArrayList(values));
         DeviceListId.setValue(values.get(0));
+        OpenID.setOnAction(event -> {
+
+        });
     }
 
 }
