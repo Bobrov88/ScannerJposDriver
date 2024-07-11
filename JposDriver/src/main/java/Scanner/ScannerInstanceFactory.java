@@ -44,7 +44,7 @@ public final class ScannerInstanceFactory implements JposServiceInstanceFactory 
             throw new JposException(jpos.JposConst.JPOS_E_NOSERVICE,
                     "Could not create the service instance!", localException);
         }
-        logger.debug("Connection to port: OK");
+        logger.debug("Comport defined");
 
         return localJposServiceInstance;
     }

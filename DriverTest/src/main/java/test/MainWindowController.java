@@ -71,6 +71,13 @@ public class MainWindowController {
             } catch (JposException e) {
                 throw new RuntimeException(e);
             }
+            OpenID.setDisable(true);
+            ClaimID.setDisable(false);
+            ReleaseID.setDisable(false);
+        });
+        ClaimID.setOnAction(event -> {
+            Scanner scanner = new Scanner();
+
         });
     }
 

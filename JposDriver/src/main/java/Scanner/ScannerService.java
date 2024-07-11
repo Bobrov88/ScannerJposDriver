@@ -18,7 +18,7 @@ public class ScannerService implements ScannerService114 {
 
     public void setCommPortNumber(int pCommPortNumber) throws JposException {
         // save the port number
-        logger.info("Setting com port to " + pCommPortNumber);
+        logger.info("Setting comport to " + pCommPortNumber);
         this.commPortNumber = pCommPortNumber;
         if (!(pCommPortNumber > 0 && pCommPortNumber < 255)) {
             logger.fatal("Port number < 1 or > 255. Connection refused!");
