@@ -1,9 +1,9 @@
 package test;
 
+import jpos.JposConst;
 import jpos.config.JposEntry;
 import jpos.config.simple.SimpleEntryRegistry;
 import jpos.config.simple.xml.SimpleXmlRegPopulator;
-
 import java.util.*;
 
 public class Utility {
@@ -40,5 +40,26 @@ public class Utility {
         }
         Collections.sort(deviceList);
         return deviceList;
+    }
+
+    public static JposEntry getJposEntryByLogicalName(String logicalName) {
+        getDeviceListFromXML();
+        SimpleEntryRegistry reg = null;
+        try {
+            reg = new SimpleEntryRegistry(new SimpleXmlRegPopulator());
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException(e.toString());
+        }
+        reg.load();
+        data = new Object[reg.getSize()][4];
+        Enumeration<?> entriesEnum = reg.getEntries();
+        int count = 0;
+        for (; entriesEnum.hasMoreElements(); ++count) {
+            JposEntry entry = (JposEntry) entriesEnum.nextElement();
+            if (entry.getProp("logicalName").getValueAsString().compareTo(logicalName) == 0)
+                return entry;
+        }
+        return null;
     }
 }

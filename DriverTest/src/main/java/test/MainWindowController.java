@@ -15,15 +15,20 @@ import java.net.URL;
 import java.util.*;
 
 import javafx.scene.layout.TilePane;
+import jpos.JposException;
 import jpos.config.JposEntry;
 import jpos.config.simple.SimpleEntry;
 import jpos.config.simple.SimpleEntryRegistry;
 import jpos.config.simple.xml.SimpleXmlRegPopulator;
 import Logger.MyLogger;
-import org.apache.logging.log4j.Logger;
+import jpos.loader.JposServiceInstance;
+import org.apache.log4j.Logger;
 import test.Utility;
 
 import static test.Utility.extractLogicalName;
+import static test.Utility.getJposEntryByLogicalName;
+
+import Scanner.ScannerInstanceFactory;
 
 public class MainWindowController {
     @FXML
@@ -49,7 +54,7 @@ public class MainWindowController {
     @FXML
     private TextField ScannedDataTextAreaID;
 
-    //  private Logger logger = MyLogger.createLoggerInstance(MainWindowController.class.getName());
+    private Logger logger = MyLogger.createLoggerInstance(MainWindowController.class.getName());
     @FXML
     void initialize() {
         ClaimID.setDisable(true);
@@ -58,7 +63,14 @@ public class MainWindowController {
         DeviceListId.setItems(FXCollections.observableArrayList(values));
         DeviceListId.setValue(values.get(0));
         OpenID.setOnAction(event -> {
-
+            ScannerInstanceFactory scanner = new ScannerInstanceFactory();
+            JposEntry jposEntry = getJposEntryByLogicalName(DeviceListId.getValue());
+            JposServiceInstance jposServiceInstance;
+            try {
+                jposServiceInstance = scanner.createInstance("", jposEntry);
+            } catch (JposException e) {
+                throw new RuntimeException(e);
+            }
         });
     }
 

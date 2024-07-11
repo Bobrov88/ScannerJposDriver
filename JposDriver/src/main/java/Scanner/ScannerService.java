@@ -6,13 +6,10 @@ import jpos.JposConst;
 import jpos.JposException;
 import jpos.services.EventCallbacks;
 import jpos.services.ScannerService114;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import java.lang.reflect.Method;
-
+import org.apache.log4j.Logger;
+import Logger.MyLogger;
 public class ScannerService implements ScannerService114 {
-    private static final Logger logger = LogManager.getLogger(ScannerService.class.getName());
+    private Logger logger = MyLogger.createLoggerInstance(ScannerService.class.getName());
     private int commPortNumber;
     private int state = JposConst.JPOS_S_CLOSED;
     private EventCallbacks callBack;

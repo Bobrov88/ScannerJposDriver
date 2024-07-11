@@ -1,14 +1,12 @@
 package Logger;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 
 public class MyLogger {
-    private static Logger logger = null;
     static public Logger createLoggerInstance(String className) {
-        logger = LogManager.getLogger(className);
-        System.setProperty("log4j.configurationFile", "logging.properties");
+        Logger logger = Logger.getLogger(className);
+        PropertyConfigurator.configure("logging.properties");
         return logger;
     }
-
 }
