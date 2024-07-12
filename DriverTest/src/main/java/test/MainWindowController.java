@@ -22,6 +22,7 @@ import jpos.config.simple.SimpleEntryRegistry;
 import jpos.config.simple.xml.SimpleXmlRegPopulator;
 import Logger.MyLogger;
 import jpos.loader.JposServiceInstance;
+import jpos.services.EventCallbacks;
 import org.apache.log4j.Logger;
 import test.Utility;
 
@@ -29,6 +30,7 @@ import static test.Utility.extractLogicalName;
 import static test.Utility.getJposEntryByLogicalName;
 
 import Scanner.ScannerInstanceFactory;
+import Scanner.ScannerService;
 
 public class MainWindowController {
     @FXML
@@ -54,6 +56,8 @@ public class MainWindowController {
     @FXML
     private TextField ScannedDataTextAreaID;
 
+    private ScannerService scannerService;
+
     private Logger logger = MyLogger.createLoggerInstance(MainWindowController.class.getName());
     @FXML
     void initialize() {
@@ -62,12 +66,12 @@ public class MainWindowController {
         List<String> values = extractLogicalName();
         DeviceListId.setItems(FXCollections.observableArrayList(values));
         DeviceListId.setValue(values.get(0));
+        logger.debug("Initializing main window");
         OpenID.setOnAction(event -> {
             ScannerInstanceFactory scanner = new ScannerInstanceFactory();
             JposEntry jposEntry = getJposEntryByLogicalName(DeviceListId.getValue());
-            JposServiceInstance jposServiceInstance;
             try {
-                jposServiceInstance = scanner.createInstance("", jposEntry);
+                scannerService = (ScannerService) scanner.createInstance("", jposEntry);
             } catch (JposException e) {
                 throw new RuntimeException(e);
             }
@@ -76,8 +80,11 @@ public class MainWindowController {
             ReleaseID.setDisable(false);
         });
         ClaimID.setOnAction(event -> {
-            Scanner scanner = new Scanner();
-
+            try {
+                scannerService.open("COM3", null);
+            } catch (JposException e) {
+                throw new RuntimeException(e);
+            }
         });
     }
 

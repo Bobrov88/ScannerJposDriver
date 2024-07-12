@@ -1,20 +1,32 @@
 package Scanner;
 
 import Bytes.SendBytes;
-import Thread.ScannerSerialThread;
+//import Thread.ScannerSerialThread;
 import jpos.JposConst;
 import jpos.JposException;
+import jpos.Scanner;
+import jpos.loader.JposServiceInstance;
 import jpos.services.EventCallbacks;
 import jpos.services.ScannerService114;
 import org.apache.log4j.Logger;
+import jssc.SerialPort;
+import jssc.SerialPortEvent;
+import jssc.SerialPortEventListener;
+import jssc.SerialPortException;
+
 import Logger.MyLogger;
+
+import java.io.IOException;
+import java.util.Arrays;
+
 public class ScannerService implements ScannerService114 {
     private Logger logger = MyLogger.createLoggerInstance(ScannerService.class.getName());
     private int commPortNumber;
     private int state = JposConst.JPOS_S_CLOSED;
-    private EventCallbacks callBack;
-    private ScannerSerialThread internalThread = null;
+    private EventCallbacks callBack = null;
+//    private ScannerSerialThread internalThread = null;
     private boolean claimed = false;
+    private static SerialPort serialPort;
 
     public void setCommPortNumber(int pCommPortNumber) throws JposException {
         // save the port number
@@ -212,32 +224,32 @@ public class ScannerService implements ScannerService114 {
 
     @Override
     public void claim(int timeout) throws JposException {
-        try {
-            // Create the internal thread
-            this.internalThread = new ScannerSerialThread("COM" + this.commPortNumber);
-            System.out.println(1);
-            // Wait the thread is not busy
-            waitThreadNotBusy();
-            System.out.println(2);
-            // Command the physical device to cancel insert operation
-            logger.debug("Claiming... That's sending 'ReadDeviceInfo.' command");
-            this.internalThread.sendSimpleOrderMessage(SendBytes.GET_DEVICE_INFO);
-            System.out.println(3);
-            waitThreadNotBusy();
-           // System.out.println(4);
-            // Command the physical device to eject check if their are one in
-            //byte[] data2 = { IngenicoFunction.INGENICO_EJECT_CHECK };
-            //this.internalThread.sendSimpleOrderMessage(data2);
-            //System.out.println(5);
-            // Wait that the communication thread is not busy
-            //waitThreadNotBusy();
-            //System.out.println(6);
-            System.out.println(4);
-            this.claimed = true;
-        } catch (Exception e) {
-            logger.fatal("Claim: " + e.getMessage());
-            throw new JposException(JposConst.JPOS_E_NOTCLAIMED, "Error in device preparation", e);
-        }
+ //       try {
+//            // Create the internal thread
+//            this.internalThread = new ScannerSerialThread("COM" + this.commPortNumber);
+//            System.out.println(1);
+//            // Wait the thread is not busy
+//            waitThreadNotBusy();
+//            System.out.println(2);
+//            // Command the physical device to cancel insert operation
+//            logger.debug("Claiming... That's sending 'ReadDeviceInfo.' command");
+//            this.internalThread.sendSimpleOrderMessage(SendBytes.GET_DEVICE_INFO);
+//            System.out.println(3);
+//            waitThreadNotBusy();
+//           // System.out.println(4);
+//            // Command the physical device to eject check if their are one in
+//            //byte[] data2 = { IngenicoFunction.INGENICO_EJECT_CHECK };
+//            //this.internalThread.sendSimpleOrderMessage(data2);
+//            //System.out.println(5);
+//            // Wait that the communication thread is not busy
+//            //waitThreadNotBusy();
+//            //System.out.println(6);
+//            System.out.println(4);
+//            this.claimed = true;
+//        } catch (Exception e) {
+//            logger.fatal("Claim: " + e.getMessage());
+//            throw new JposException(JposConst.JPOS_E_NOTCLAIMED, "Error in device preparation", e);
+//        }
     }
 
     @Override
@@ -258,29 +270,50 @@ public class ScannerService implements ScannerService114 {
     @Override
     public void open(String logicalName, EventCallbacks eventCallbacks) throws JposException {
         logger.debug("Opening with logical name: " + logicalName);
+        serialPort = new SerialPort(logicalName);
+        logger.debug("Try");
+        try {
+            serialPort.openPort();
+            logger.debug("Port opened");
+            serialPort.setParams(SerialPort.BAUDRATE_9600, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
+            logger.debug("Params settled");
+        //    serialPort.addEventListener(new PortReader());
+        } catch (SerialPortException e) {
+            logger.fatal(e.getMessage());
+            throw new RuntimeException(e);
+        }
+        byte[] sendBytes = {(byte)0x07, (byte)0x00, (byte)0x08, (byte)0x01, (byte)0x00, (byte)0xA5, (byte)0xAB, (byte)0xCD};
+        try {
+            for(byte i=0;i<sendBytes.length;++i) {
+                serialPort.writeByte(sendBytes[i]);
+            }
+        } catch (SerialPortException e) {
+            logger.fatal(e.getMessage());
+            throw new RuntimeException(e);
+        }
         this.state = JposConst.JPOS_S_IDLE;
         this.callBack = eventCallbacks;
     }
 
     @Override
     public void release() throws JposException {
-        logger.debug("Release");
-        if (this.claimed == false) {
-            return;
-        }
-        this.internalThread.abort();
-        this.claimed = false;
-        this.state = JposConst.JPOS_S_IDLE;
+//        logger.debug("Release");
+//        if (this.claimed == false) {
+//            return;
+//        }
+//        this.internalThread.abort();
+//        this.claimed = false;
+//        this.state = JposConst.JPOS_S_IDLE;
     }
 
-    private boolean waitThreadNotBusy() throws JposException {
-        logger.debug("WaitThreadNotBusy");
-        try {
-            internalThread.getNotBusyWaiter().waitNotBusy();
-        } catch (InterruptedException e) {
-            logger.fatal("WaitThreadNotBusy: "  + e.getMessage());
-            throw new JposException(JposConst.JPOS_E_FAILURE, "The waiting service has been interrupted");
-        }
-        return internalThread.getNotBusyWaiter().isNotified();
-    }
+//    private boolean waitThreadNotBusy() throws JposException {
+//        logger.debug("WaitThreadNotBusy");
+//        try {
+//            internalThread.getNotBusyWaiter().waitNotBusy();
+//        } catch (InterruptedException e) {
+//            logger.fatal("WaitThreadNotBusy: "  + e.getMessage());
+//            throw new JposException(JposConst.JPOS_E_FAILURE, "The waiting service has been interrupted");
+//        }
+//        return internalThread.getNotBusyWaiter().isNotified();
+//    }
 }

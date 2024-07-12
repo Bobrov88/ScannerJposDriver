@@ -19,7 +19,6 @@ targetCompatibility = '17'
 dependencies {
   compileOnly files('../libs/jpos1141.jar')
   compileOnly files('../libs/xerces.jar')
-  //implementation 'org.apache.logging.log4j:log4j-core:2.23.1'
   implementation files('../libs/log4j-1.2.17.jar')
   implementation project(':JposDriver')
 }
