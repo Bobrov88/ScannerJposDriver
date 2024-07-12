@@ -271,22 +271,18 @@ public class ScannerService implements ScannerService114 {
     public void open(String logicalName, EventCallbacks eventCallbacks) throws JposException {
         logger.debug("Opening with logical name: " + logicalName);
         serialPort = new SerialPort(logicalName);
-        logger.debug("Try");
         try {
             serialPort.openPort();
-            logger.debug("Port opened");
             serialPort.setParams(SerialPort.BAUDRATE_9600, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
-            logger.debug("Params settled");
-        //    serialPort.addEventListener(new PortReader());
+            //    serialPort.addEventListener(new PortReader());
         } catch (SerialPortException e) {
             logger.fatal(e.getMessage());
             throw new RuntimeException(e);
         }
-        byte[] sendBytes = {(byte)0x07, (byte)0x00, (byte)0x08, (byte)0x01, (byte)0x00, (byte)0xA5, (byte)0xAB, (byte)0xCD};
+        logger.debug("Port opened");
+        byte[] sendBytes = {(byte) 0x7E, (byte) 0x00, (byte) 0x08, (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0xAB, (byte) 0xCD};
         try {
-            for(byte i=0;i<sendBytes.length;++i) {
-                serialPort.writeByte(sendBytes[i]);
-            }
+            serialPort.writeBytes(sendBytes);
         } catch (SerialPortException e) {
             logger.fatal(e.getMessage());
             throw new RuntimeException(e);
