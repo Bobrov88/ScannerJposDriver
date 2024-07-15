@@ -21,26 +21,30 @@ public final class ScannerInstanceFactory implements JposServiceInstanceFactory 
 
         logger.debug("Creating instance of scanner");
 
-        if (!(paramJposEntry.hasPropertyWithName("serviceClass")))
+        if (!(paramJposEntry.hasPropertyWithName("serviceClass"))) {
+            logger.fatal("The JposEntry does not contain the 'serviceClass' property");
             throw new JposException(JposConst.JPOS_E_NOSERVICE,
                     "The JposEntry does not contain the 'serviceClass' property");
-        if (!(paramJposEntry.hasPropertyWithName("portName")))
+        }
+        if (!(paramJposEntry.hasPropertyWithName("portName"))) {
+            logger.fatal("The JposEntry does not contain the 'portName' property");
             throw new JposException(JposConst.JPOS_E_NOSERVICE,
                     "The JposEntry does not contain the 'portName' property");
-        int lCommPortNumber = -1;
-        Prop lCommPortNumberProp = paramJposEntry.getProp("portName");
+        }
 
-        lCommPortNumber = Integer.parseInt(lCommPortNumberProp
+        int comport = -1;
+        Prop lCommPortNumberProp = paramJposEntry.getProp("portName");
+        comport = Integer.parseInt(lCommPortNumberProp
                 .getValueAsString());
 
-        logger.info("Port name: " + lCommPortNumber);
+        logger.info("Port name: " + comport);
 
         ScannerService localJposServiceInstance = null;
         try {
             localJposServiceInstance = new ScannerService();
-            localJposServiceInstance.setCommPortNumber(lCommPortNumber);
+            localJposServiceInstance.setComPortNumber(comport);
         } catch (Exception localException) {
-            logger.fatal("Connection to port: " + lCommPortNumber + " failed");
+            logger.fatal("Connection to port: " + comport + " failed");
             throw new JposException(jpos.JposConst.JPOS_E_NOSERVICE,
                     "Could not create the service instance!", localException);
         }

@@ -6,6 +6,7 @@ import jpos.JposConst;
 import jpos.JposException;
 import jpos.Scanner;
 import jpos.loader.JposServiceInstance;
+import jpos.profile.JposDevCats;
 import jpos.services.EventCallbacks;
 import jpos.services.ScannerService114;
 import org.apache.log4j.Logger;
@@ -20,23 +21,27 @@ import java.io.IOException;
 import java.util.Arrays;
 
 public class ScannerService implements ScannerService114 {
-    private Logger logger = MyLogger.createLoggerInstance(ScannerService.class.getName());
-    private int commPortNumber;
+    private final Logger logger = MyLogger.createLoggerInstance(ScannerService.class.getName());
+    private int comPort = 1;
     private int state = JposConst.JPOS_S_CLOSED;
+    private int timeout = -1;
     private EventCallbacks callBack = null;
-//    private ScannerSerialThread internalThread = null;
+    private boolean deviceEnable = false;
     private boolean claimed = false;
     private static SerialPort serialPort;
 
-    public void setCommPortNumber(int pCommPortNumber) throws JposException {
-        // save the port number
-        logger.info("Setting comport to " + pCommPortNumber);
-        this.commPortNumber = pCommPortNumber;
-        if (!(pCommPortNumber > 0 && pCommPortNumber < 255)) {
+    public void setComPortNumber(int comPort) throws JposException {
+        logger.info("Setting comport to " + comPort);
+        this.comPort = comPort;
+        if (!(comPort > 0 && comPort < 255)) {
             logger.fatal("Port number < 1 or > 255. Connection refused!");
             throw new JposException(JposConst.JPOS_E_FAILURE, "Invalid comm port number");
         }
     }
+    public int getComPortNumber() {
+        return this.comPort;
+    }
+
     @Override
     public void clearInputProperties() throws JposException {
 
@@ -174,17 +179,17 @@ public class ScannerService implements ScannerService114 {
 
     @Override
     public boolean getClaimed() throws JposException {
-        return false;
+        return this.claimed;
     }
 
     @Override
     public boolean getDeviceEnabled() throws JposException {
-        return false;
+        return this.deviceEnable;
     }
 
     @Override
     public void setDeviceEnabled(boolean b) throws JposException {
-
+        this.deviceEnable = b;
     }
 
     @Override
@@ -219,42 +224,25 @@ public class ScannerService implements ScannerService114 {
 
     @Override
     public int getState() throws JposException {
-        return 0;
+        return state;
     }
 
     @Override
     public void claim(int timeout) throws JposException {
- //       try {
-//            // Create the internal thread
-//            this.internalThread = new ScannerSerialThread("COM" + this.commPortNumber);
-//            System.out.println(1);
-//            // Wait the thread is not busy
-//            waitThreadNotBusy();
-//            System.out.println(2);
-//            // Command the physical device to cancel insert operation
-//            logger.debug("Claiming... That's sending 'ReadDeviceInfo.' command");
-//            this.internalThread.sendSimpleOrderMessage(SendBytes.GET_DEVICE_INFO);
-//            System.out.println(3);
-//            waitThreadNotBusy();
-//           // System.out.println(4);
-//            // Command the physical device to eject check if their are one in
-//            //byte[] data2 = { IngenicoFunction.INGENICO_EJECT_CHECK };
-//            //this.internalThread.sendSimpleOrderMessage(data2);
-//            //System.out.println(5);
-//            // Wait that the communication thread is not busy
-//            //waitThreadNotBusy();
-//            //System.out.println(6);
-//            System.out.println(4);
-//            this.claimed = true;
-//        } catch (Exception e) {
-//            logger.fatal("Claim: " + e.getMessage());
-//            throw new JposException(JposConst.JPOS_E_NOTCLAIMED, "Error in device preparation", e);
-//        }
+        if (claimed) {
+            logger.fatal("JPOS_E_ILLEGAL state. Device cannot be claimed!");
+            throw new JposException(JposConst.JPOS_E_CLAIMED, "JPOS_E_ILLEGAL state. Device cannot be claimed!");
+        }
+        this.claimed = true;
+        this.timeout = timeout;
     }
 
     @Override
     public void close() throws JposException {
-
+        logger.debug("Close device");
+        this.deviceEnable = false;
+        this.claimed = false;
+        this.state  = JposConst.JPOS_S_CLOSED;
     }
 
     @Override
@@ -271,15 +259,21 @@ public class ScannerService implements ScannerService114 {
     public void open(String logicalName, EventCallbacks eventCallbacks) throws JposException {
         logger.debug("Opening with logical name: " + logicalName);
         serialPort = new SerialPort(logicalName);
-        try {
-            serialPort.openPort();
-            serialPort.setParams(SerialPort.BAUDRATE_9600, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
-            //    serialPort.addEventListener(new PortReader());
-        } catch (SerialPortException e) {
-            logger.fatal(e.getMessage());
-            throw new RuntimeException(e);
+        if (state != JposConst.JPOS_S_CLOSED) {
+            try {
+                serialPort.openPort();
+                //serialPort.setParams(SerialPort.BAUDRATE_9600, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
+                // TODO get from jpos.xml
+                //    serialPort.addEventListener(new PortReader());
+            } catch (SerialPortException e) {
+                logger.fatal(e.getMessage());
+                throw new RuntimeException(e);
+            }
         }
+        state = JposConst.JPOS_S_IDLE;
+        this.callBack = eventCallbacks;
         logger.debug("Port opened");
+
         byte[] sendBytes = {(byte) 0x7E, (byte) 0x00, (byte) 0x08, (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0xAB, (byte) 0xCD};
         try {
             serialPort.writeBytes(sendBytes);
@@ -287,29 +281,14 @@ public class ScannerService implements ScannerService114 {
             logger.fatal(e.getMessage());
             throw new RuntimeException(e);
         }
-        this.state = JposConst.JPOS_S_IDLE;
-        this.callBack = eventCallbacks;
-    }
 
+    }
     @Override
     public void release() throws JposException {
-//        logger.debug("Release");
-//        if (this.claimed == false) {
-//            return;
-//        }
-//        this.internalThread.abort();
-//        this.claimed = false;
-//        this.state = JposConst.JPOS_S_IDLE;
+        logger.debug("Release device");
+        if (!this.claimed)
+            return;
+        this.claimed = false;
+        this.state = JposConst.JPOS_S_IDLE;
     }
-
-//    private boolean waitThreadNotBusy() throws JposException {
-//        logger.debug("WaitThreadNotBusy");
-//        try {
-//            internalThread.getNotBusyWaiter().waitNotBusy();
-//        } catch (InterruptedException e) {
-//            logger.fatal("WaitThreadNotBusy: "  + e.getMessage());
-//            throw new JposException(JposConst.JPOS_E_FAILURE, "The waiting service has been interrupted");
-//        }
-//        return internalThread.getNotBusyWaiter().isNotified();
-//    }
 }
