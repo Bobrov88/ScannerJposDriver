@@ -26,9 +26,9 @@ public class ScannerService implements ScannerService114 {
     private int state = JposConst.JPOS_S_CLOSED;
     private int timeout = -1;
     private EventCallbacks callBack = null;
-    private boolean deviceEnable = false;
-    private boolean claimed = false;
-    private static SerialPort serialPort;
+    private boolean deviceEnable = false; // TODO static
+    private boolean claimed = false; // TODO static
+    private SerialPort serialPort; // TODO static
 
     public void setComPortNumber(int comPort) throws JposException {
         logger.info("Setting comport to " + comPort);
@@ -257,36 +257,41 @@ public class ScannerService implements ScannerService114 {
 
     @Override
     public void open(String logicalName, EventCallbacks eventCallbacks) throws JposException {
-        logger.debug("Opening with logical name: " + logicalName);
-        serialPort = new SerialPort(logicalName);
-        if (state != JposConst.JPOS_S_CLOSED) {
+        logger.debug("Opening " + logicalName + ": COM" + String.valueOf(comPort));
+        logger.debug(String.valueOf(state));
+        logger.debug(String.valueOf(deviceEnable));
+            serialPort = new SerialPort("COM3");
             try {
                 serialPort.openPort();
-                //serialPort.setParams(SerialPort.BAUDRATE_9600, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
+                if (serialPort.isOpened())
+                    logger.debug("Serial port opened");
+                serialPort.setParams(SerialPort.BAUDRATE_9600, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
                 // TODO get from jpos.xml
                 //    serialPort.addEventListener(new PortReader());
             } catch (SerialPortException e) {
                 logger.fatal(e.getMessage());
                 throw new RuntimeException(e);
             }
-        }
+        logger.debug(serialPort == null ? "null" : "sp");
         state = JposConst.JPOS_S_IDLE;
         this.callBack = eventCallbacks;
+        this.deviceEnable = true;
         logger.debug("Port opened");
-
+        logger.debug(serialPort == null ? "null" : "sp");
         byte[] sendBytes = {(byte) 0x7E, (byte) 0x00, (byte) 0x08, (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0xAB, (byte) 0xCD};
         try {
+            logger.debug(serialPort == null ? "null" : "sp");
             serialPort.writeBytes(sendBytes);
+            logger.debug(serialPort == null ? "null" : "sp");
         } catch (SerialPortException e) {
             logger.fatal(e.getMessage());
             throw new RuntimeException(e);
         }
-
     }
     @Override
     public void release() throws JposException {
         logger.debug("Release device");
-        if (!this.claimed)
+        if (!this.claimed || !this.deviceEnable)
             return;
         this.claimed = false;
         this.state = JposConst.JPOS_S_IDLE;

@@ -34,10 +34,6 @@ import Scanner.ScannerService;
 
 public class MainWindowController {
     @FXML
-    private ResourceBundle resources;
-    @FXML
-    private URL location;
-    @FXML
     private Label AvailableDeviceId;
     @FXML
     private Button ClaimID;
@@ -45,47 +41,105 @@ public class MainWindowController {
     private Button ClearID;
     @FXML
     private ComboBox<String> DeviceListId;
+    private Map<String, DeviceListState> deviceLists;
     @FXML
     private AnchorPane MainWindowID;
     @FXML
     private Button OpenID;
+    @FXML
+    private Button CloseID;
     @FXML
     private Button ReleaseID;
     @FXML
     private Label ScannedDataID;
     @FXML
     private TextField ScannedDataTextAreaID;
-
     private ScannerService scannerService;
-
     private Logger logger = MyLogger.createLoggerInstance(MainWindowController.class.getName());
     @FXML
     void initialize() {
-        ClaimID.setDisable(true);
-        ReleaseID.setDisable(true);
-        List<String> values = extractLogicalName();
-        DeviceListId.setItems(FXCollections.observableArrayList(values));
-        DeviceListId.setValue(values.get(0));
         logger.debug("Initializing main window");
-        OpenID.setOnAction(event -> {
-            ScannerInstanceFactory scanner = new ScannerInstanceFactory();
-            JposEntry jposEntry = getJposEntryByLogicalName(DeviceListId.getValue());
-            try {
-                scannerService = (ScannerService) scanner.createInstance("", jposEntry);
-            } catch (JposException e) {
-                throw new RuntimeException(e);
-            }
-            OpenID.setDisable(true);
-            ClaimID.setDisable(false);
-            ReleaseID.setDisable(false);
+        setButtonsVisibility("");
+        deviceLists = new HashMap<>();
+        for (String deviceName : extractLogicalName()) {
+            deviceLists.put(deviceName, new DeviceListState());
+        }
+        DeviceListId.setItems(FXCollections.observableArrayList(deviceLists.keySet()));
+        DeviceListId.setValue("Choose device");
+
+        DeviceListId.setOnAction(event -> {
+            setButtonsVisibility(DeviceListId.getValue());
         });
+
+        OpenID.setOnAction(event -> {
+                    String deviceName = DeviceListId.getValue();
+                    logger.debug("OpenId with device: " + deviceName);
+                    JposEntry jposEntry = getJposEntryByLogicalName(deviceName);
+                    try {
+                        ScannerInstanceFactory scanner = new ScannerInstanceFactory();
+                        scannerService = (ScannerService) scanner.createInstance("", jposEntry);
+                        scannerService.open(deviceName, null);
+                    } catch (JposException e) {
+                        logger.fatal(e.getMessage());
+                        throw new RuntimeException(e);
+                    }
+                    deviceLists.get(deviceName).onOpenClicked();
+                    setButtonsVisibility(deviceName);
+                });
+
         ClaimID.setOnAction(event -> {
+            logger.debug("Claiming");
             try {
-                scannerService.open("COM3", null);
+                scannerService.claim(1000);
             } catch (JposException e) {
+                logger.fatal(e.getMessage());
                 throw new RuntimeException(e);
             }
+            String deviceName = DeviceListId.getValue();
+            deviceLists.get(deviceName).onClaimClicked();
+            setButtonsVisibility(deviceName);
+        });
+
+        ReleaseID.setOnAction(event -> {
+            logger.debug("Releasing");
+            try {
+                scannerService.release();
+            } catch (JposException e) {
+                logger.fatal(e.getMessage());
+                throw new RuntimeException(e);
+            }
+            String deviceName = DeviceListId.getValue();
+            deviceLists.get(deviceName).onReleaseClicked();
+            setButtonsVisibility(deviceName);
+        });
+
+        CloseID.setOnAction(event -> {
+            logger.debug("Closing");
+            try {
+                scannerService.close();
+            } catch (JposException e) {
+                logger.fatal(e.getMessage());
+                throw new RuntimeException(e);
+            }
+            String deviceName = DeviceListId.getValue();
+            deviceLists.get(deviceName).onCloseClicked();
+            setButtonsVisibility(deviceName);
         });
     }
-
+    void setButtonsVisibility(String chosenDevice) {
+        if (chosenDevice == "") {
+            OpenID.setDisable(true);
+            ClaimID.setDisable(true);
+            ReleaseID.setDisable(true);
+            CloseID.setDisable(true);
+            ScannedDataTextAreaID.setDisable(true);
+        } else {
+            DeviceListState d = deviceLists.get(chosenDevice);
+            OpenID.setDisable(d.isOpenDisable);
+            ClaimID.setDisable(d.isClaimDisable);
+            ReleaseID.setDisable(d.isReleaseDisable);
+            CloseID.setDisable(d.isCloseDisable);
+            ScannedDataTextAreaID.setDisable(d.isScannedTextFiledDisable);
+        }
+    }
 }

@@ -10,15 +10,11 @@ import jpos.loader.JposServiceInstanceFactory;
 import org.apache.log4j.Logger;
 
 public final class ScannerInstanceFactory implements JposServiceInstanceFactory {
-
     private Logger logger = MyLogger.createLoggerInstance(ScannerInstanceFactory.class.getName());
-
     public ScannerInstanceFactory() {
         logger.info("ScannerInstanceFactory constructor called");
     }
-
     public JposServiceInstance createInstance(String paramString, JposEntry paramJposEntry) throws JposException {
-
         logger.debug("Creating instance of scanner");
 
         if (!(paramJposEntry.hasPropertyWithName("serviceClass"))) {
