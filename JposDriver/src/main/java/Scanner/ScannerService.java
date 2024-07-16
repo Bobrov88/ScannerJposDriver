@@ -1,12 +1,9 @@
 package Scanner;
 
 import Bytes.SendBytes;
-//import Thread.ScannerSerialThread;
 import jpos.JposConst;
 import jpos.JposException;
-import jpos.Scanner;
-import jpos.loader.JposServiceInstance;
-import jpos.profile.JposDevCats;
+import jpos.events.DataEvent;
 import jpos.services.EventCallbacks;
 import jpos.services.ScannerService114;
 import org.apache.log4j.Logger;
@@ -14,11 +11,7 @@ import jssc.SerialPort;
 import jssc.SerialPortEvent;
 import jssc.SerialPortEventListener;
 import jssc.SerialPortException;
-
 import Logger.MyLogger;
-
-import java.io.IOException;
-import java.util.Arrays;
 
 public class ScannerService implements ScannerService114 {
     private final Logger logger = MyLogger.createLoggerInstance(ScannerService.class.getName());
@@ -26,6 +19,8 @@ public class ScannerService implements ScannerService114 {
     private int state = JposConst.JPOS_S_CLOSED;
     private int timeout = -1;
     private EventCallbacks callBack = null;
+    private DataEvent dataEvent = null;
+    private byte[] receivedData;
     private boolean deviceEnable = false; // TODO static
     private boolean claimed = false; // TODO static
     private SerialPort serialPort; // TODO static
@@ -38,6 +33,7 @@ public class ScannerService implements ScannerService114 {
             throw new JposException(JposConst.JPOS_E_FAILURE, "Invalid comm port number");
         }
     }
+
     public int getComPortNumber() {
         return this.comPort;
     }
@@ -154,7 +150,7 @@ public class ScannerService implements ScannerService114 {
 
     @Override
     public byte[] getScanData() throws JposException {
-        return new byte[0];
+        return receivedData;
     }
 
     @Override
@@ -169,7 +165,6 @@ public class ScannerService implements ScannerService114 {
 
     @Override
     public void clearInput() throws JposException {
-
     }
 
     @Override
@@ -242,7 +237,14 @@ public class ScannerService implements ScannerService114 {
         logger.debug("Close device");
         this.deviceEnable = false;
         this.claimed = false;
-        this.state  = JposConst.JPOS_S_CLOSED;
+        this.state = JposConst.JPOS_S_CLOSED;
+        if (serialPort.isOpened()) {
+            try {
+                serialPort.closePort();
+            } catch (SerialPortException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     @Override
@@ -258,36 +260,23 @@ public class ScannerService implements ScannerService114 {
     @Override
     public void open(String logicalName, EventCallbacks eventCallbacks) throws JposException {
         logger.debug("Opening " + logicalName + ": COM" + String.valueOf(comPort));
-        logger.debug(String.valueOf(state));
-        logger.debug(String.valueOf(deviceEnable));
-            serialPort = new SerialPort("COM3");
-            try {
-                serialPort.openPort();
-                if (serialPort.isOpened())
-                    logger.debug("Serial port opened");
-                serialPort.setParams(SerialPort.BAUDRATE_9600, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
-                // TODO get from jpos.xml
-                //    serialPort.addEventListener(new PortReader());
-            } catch (SerialPortException e) {
-                logger.fatal(e.getMessage());
-                throw new RuntimeException(e);
-            }
-        logger.debug(serialPort == null ? "null" : "sp");
-        state = JposConst.JPOS_S_IDLE;
-        this.callBack = eventCallbacks;
-        this.deviceEnable = true;
-        logger.debug("Port opened");
-        logger.debug(serialPort == null ? "null" : "sp");
-        byte[] sendBytes = {(byte) 0x7E, (byte) 0x00, (byte) 0x08, (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0xAB, (byte) 0xCD};
+        serialPort = new SerialPort("COM" + String.valueOf(comPort));
         try {
-            logger.debug(serialPort == null ? "null" : "sp");
-            serialPort.writeBytes(sendBytes);
-            logger.debug(serialPort == null ? "null" : "sp");
+            serialPort.openPort();
+            if (serialPort.isOpened())
+                logger.debug("Serial port opened");
+            serialPort.setParams(SerialPort.BAUDRATE_9600, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
+            // TODO get from jpos.xml
+            serialPort.addEventListener(new PortReader());
         } catch (SerialPortException e) {
             logger.fatal(e.getMessage());
             throw new RuntimeException(e);
         }
+        state = JposConst.JPOS_S_IDLE;
+        this.callBack = eventCallbacks;
+        this.deviceEnable = true;
     }
+
     @Override
     public void release() throws JposException {
         logger.debug("Release device");
@@ -295,5 +284,21 @@ public class ScannerService implements ScannerService114 {
             return;
         this.claimed = false;
         this.state = JposConst.JPOS_S_IDLE;
+    }
+
+    private class PortReader implements SerialPortEventListener {
+        @Override
+        public void serialEvent(SerialPortEvent event) {
+            if (event.isRXCHAR()) {
+                try {
+                    byte[] tmp = serialPort.readBytes(event.getEventValue());
+                    if (tmp != null)
+                        receivedData = tmp;
+                    logger.debug("Data: " + receivedData.toString());
+                } catch (SerialPortException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
     }
 }

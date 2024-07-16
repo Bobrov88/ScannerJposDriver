@@ -1,6 +1,10 @@
 package test;
 
+import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -72,20 +76,20 @@ public class MainWindowController {
         });
 
         OpenID.setOnAction(event -> {
-                    String deviceName = DeviceListId.getValue();
-                    logger.debug("OpenId with device: " + deviceName);
-                    JposEntry jposEntry = getJposEntryByLogicalName(deviceName);
-                    try {
-                        ScannerInstanceFactory scanner = new ScannerInstanceFactory();
-                        scannerService = (ScannerService) scanner.createInstance("", jposEntry);
-                        scannerService.open(deviceName, null);
-                    } catch (JposException e) {
-                        logger.fatal(e.getMessage());
-                        throw new RuntimeException(e);
-                    }
-                    deviceLists.get(deviceName).onOpenClicked();
-                    setButtonsVisibility(deviceName);
-                });
+            String deviceName = DeviceListId.getValue();
+            logger.debug("OpenId with device: " + deviceName);
+            JposEntry jposEntry = getJposEntryByLogicalName(deviceName);
+            try {
+                ScannerInstanceFactory scanner = new ScannerInstanceFactory();
+                scannerService = (ScannerService) scanner.createInstance("", jposEntry);
+                scannerService.open(deviceName, null);
+            } catch (JposException e) {
+                logger.fatal(e.getMessage());
+                throw new RuntimeException(e);
+            }
+            deviceLists.get(deviceName).onOpenClicked();
+            setButtonsVisibility(deviceName);
+        });
 
         ClaimID.setOnAction(event -> {
             logger.debug("Claiming");
@@ -127,7 +131,7 @@ public class MainWindowController {
         });
     }
     void setButtonsVisibility(String chosenDevice) {
-        if (chosenDevice == "") {
+        if (chosenDevice.compareTo("") == 0) {
             OpenID.setDisable(true);
             ClaimID.setDisable(true);
             ReleaseID.setDisable(true);
