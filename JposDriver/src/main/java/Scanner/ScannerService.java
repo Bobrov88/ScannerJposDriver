@@ -1,6 +1,8 @@
 package Scanner;
 
 import Bytes.SendBytes;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import jpos.JposConst;
 import jpos.JposException;
 import jpos.events.DataEvent;
@@ -13,6 +15,8 @@ import jssc.SerialPortEventListener;
 import jssc.SerialPortException;
 import Logger.MyLogger;
 
+import java.util.Arrays;
+
 public class ScannerService implements ScannerService114 {
     private final Logger logger = MyLogger.createLoggerInstance(ScannerService.class.getName());
     private int comPort = 1;
@@ -21,6 +25,7 @@ public class ScannerService implements ScannerService114 {
     private EventCallbacks callBack = null;
     private DataEvent dataEvent = null;
     private byte[] receivedData;
+    private final StringProperty scannedBarcode = new SimpleStringProperty("");
     private boolean deviceEnable = false; // TODO static
     private boolean claimed = false; // TODO static
     private SerialPort serialPort; // TODO static
@@ -33,7 +38,12 @@ public class ScannerService implements ScannerService114 {
             throw new JposException(JposConst.JPOS_E_FAILURE, "Invalid comm port number");
         }
     }
-
+    private void setScannedBarcode(byte[] bytes) {
+        scannedBarcode.set(Arrays.toString(bytes));
+    }
+    public StringProperty scannedBarcodeProperty() {
+        return scannedBarcode;
+    }
     public int getComPortNumber() {
         return this.comPort;
     }
@@ -294,7 +304,8 @@ public class ScannerService implements ScannerService114 {
                     byte[] tmp = serialPort.readBytes(event.getEventValue());
                     if (tmp != null)
                         receivedData = tmp;
-                    logger.debug("Data: " + receivedData.toString());
+                    logger.debug("Data: " + Arrays.toString(receivedData));
+                    setScannedBarcode(receivedData);
                 } catch (SerialPortException e) {
                     throw new RuntimeException(e);
                 }

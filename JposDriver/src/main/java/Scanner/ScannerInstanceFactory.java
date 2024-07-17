@@ -33,8 +33,6 @@ public final class ScannerInstanceFactory implements JposServiceInstanceFactory 
         comport = Integer.parseInt(lCommPortNumberProp
                 .getValueAsString());
 
-        logger.info("Port name: " + comport);
-
         ScannerService localJposServiceInstance = null;
         try {
             localJposServiceInstance = new ScannerService();
@@ -44,8 +42,6 @@ public final class ScannerInstanceFactory implements JposServiceInstanceFactory 
             throw new JposException(jpos.JposConst.JPOS_E_NOSERVICE,
                     "Could not create the service instance!", localException);
         }
-        logger.debug("Comport defined");
-
         return localJposServiceInstance;
     }
 }

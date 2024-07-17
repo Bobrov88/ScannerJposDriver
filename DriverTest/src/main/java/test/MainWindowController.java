@@ -1,13 +1,6 @@
 package test;
 
-import javafx.application.Platform;
-import javafx.beans.InvalidationListener;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -15,20 +8,12 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 
-import java.net.URL;
 import java.util.*;
 
-import javafx.scene.layout.TilePane;
 import jpos.JposException;
 import jpos.config.JposEntry;
-import jpos.config.simple.SimpleEntry;
-import jpos.config.simple.SimpleEntryRegistry;
-import jpos.config.simple.xml.SimpleXmlRegPopulator;
 import Logger.MyLogger;
-import jpos.loader.JposServiceInstance;
-import jpos.services.EventCallbacks;
 import org.apache.log4j.Logger;
-import test.Utility;
 
 import static test.Utility.extractLogicalName;
 import static test.Utility.getJposEntryByLogicalName;
@@ -89,6 +74,7 @@ public class MainWindowController {
             }
             deviceLists.get(deviceName).onOpenClicked();
             setButtonsVisibility(deviceName);
+            ScannedDataTextAreaID.textProperty().bind(scannerService.scannedBarcodeProperty());
         });
 
         ClaimID.setOnAction(event -> {
@@ -128,6 +114,7 @@ public class MainWindowController {
             String deviceName = DeviceListId.getValue();
             deviceLists.get(deviceName).onCloseClicked();
             setButtonsVisibility(deviceName);
+            ScannedDataTextAreaID.clear();
         });
     }
     void setButtonsVisibility(String chosenDevice) {

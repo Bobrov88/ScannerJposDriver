@@ -7,45 +7,55 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane fx:id="MainWindowID" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="452.0" prefWidth="531.0" style="-fx-background-color: #CCCCCC;" xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1" fx:controller="test.MainWindowController">
+<AnchorPane fx:id="MainWindowID" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="529.0" prefWidth="714.0" style="-fx-background-color: #CCCCCC;" xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1" fx:controller="test.MainWindowController">
    <children>
-      <Button fx:id="OpenID" layoutX="405.0" layoutY="27.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="89.0" text="Open">
+      <Button fx:id="OpenID" layoutX="405.0" layoutY="57.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="89.0" text="Open">
          <font>
             <Font size="16.0" />
          </font>
       </Button>
-      <Label fx:id="AvailableDeviceId" layoutX="34.0" layoutY="29.0" text="Available devices:">
+      <Label fx:id="AvailableDeviceId" layoutX="34.0" layoutY="59.0" text="Available devices:">
          <font>
             <Font size="22.0" />
          </font>
       </Label>
-      <ComboBox fx:id="DeviceListId" layoutX="232.0" layoutY="27.0" prefHeight="35.0" prefWidth="156.0" />
-      <Button fx:id="ClaimID" layoutX="405.0" layoutY="77.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="89.0" text="Claim">
+      <ComboBox fx:id="DeviceListId" layoutX="232.0" layoutY="57.0" prefHeight="35.0" prefWidth="156.0" />
+      <Button fx:id="ClaimID" layoutX="513.0" layoutY="57.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="89.0" text="Claim">
          <font>
             <Font size="16.0" />
          </font>
       </Button>
-      <Button fx:id="ReleaseID" layoutX="404.0" layoutY="125.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="89.0" text="Release">
+      <Button fx:id="ReleaseID" layoutX="405.0" layoutY="101.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="89.0" text="Release">
          <font>
             <Font size="16.0" />
          </font>
       </Button>
-      <TextField fx:id="ScannedDataTextAreaID" alignment="TOP_LEFT" layoutX="233.0" layoutY="239.0" prefHeight="103.0" prefWidth="261.0" />
-      <Label fx:id="ScannedDataID" layoutX="54.0" layoutY="239.0" prefHeight="32.0" prefWidth="150.0" text="Scanned data">
+      <TextField fx:id="ScannedDataTextAreaID" alignment="TOP_LEFT" layoutX="231.0" layoutY="175.0" prefHeight="85.0" prefWidth="372.0" />
+      <Label fx:id="ScannedDataID" layoutX="34.0" layoutY="300.0" prefHeight="32.0" prefWidth="150.0" text="Scanned data">
          <font>
             <Font size="22.0" />
          </font>
       </Label>
-      <Button fx:id="ClearID" layoutX="404.0" layoutY="353.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="89.0" text="Clear">
+      <Button fx:id="ClearID" layoutX="232.0" layoutY="472.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="89.0" text="Clear">
          <font>
             <Font size="16.0" />
          </font>
       </Button>
-      <Label layoutX="417.0" layoutY="430.0" text="Author: Bobrov D.A." textFill="RED" />
-      <Button fx:id="CloseID" layoutX="405.0" layoutY="175.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="89.0" text="Close">
+      <Label layoutX="602.0" layoutY="507.0" style="-fx-text-fill: #240137;" text="2024 © Bobrov D.A." textFill="RED" />
+      <Button fx:id="CloseID" layoutX="513.0" layoutY="101.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="89.0" text="Close">
          <font>
             <Font size="16.0" />
          </font>
       </Button>
+      <Label fx:id="TitleId" alignment="TOP_CENTER" layoutX="41.0" layoutY="14.0" prefHeight="17.0" prefWidth="646.0" style="-fx-text-fill: F80012;" text="JPOS Driver for Scanner NeoFoxSD">
+         <font>
+            <Font name="System Bold" size="18.0" />
+         </font>
+      </Label>
+      <Label fx:id="AvailableDeviceId1" layoutX="34.0" layoutY="167.0" text="Device Info:">
+         <font>
+            <Font size="22.0" />
+         </font>
+      </Label>
    </children>
 </AnchorPane>
