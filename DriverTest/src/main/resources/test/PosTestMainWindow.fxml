@@ -30,8 +30,11 @@
             <Font size="16.0" />
          </font>
       </Button>
-      <TextField fx:id="ScannedDataTextAreaID" alignment="TOP_LEFT" layoutX="231.0" layoutY="175.0" prefHeight="85.0" prefWidth="372.0" />
-      <Label fx:id="ScannedDataID" layoutX="34.0" layoutY="300.0" prefHeight="32.0" prefWidth="150.0" text="Scanned data">
+      <TextField fx:id="ScannedDataTextAreaID" alignment="CENTER" layoutX="204.0" layoutY="161.0" prefHeight="80.0" prefWidth="438.0">
+         <font>
+            <Font name="System Bold" size="13.0" />
+         </font></TextField>
+      <Label fx:id="ScannedDataID" layoutX="34.0" layoutY="157.0" prefHeight="32.0" prefWidth="150.0" text="Scanned data">
          <font>
             <Font size="22.0" />
          </font>
@@ -50,11 +53,6 @@
       <Label fx:id="TitleId" alignment="TOP_CENTER" layoutX="41.0" layoutY="14.0" prefHeight="17.0" prefWidth="646.0" style="-fx-text-fill: F80012;" text="JPOS Driver for Scanner NeoFoxSD">
          <font>
             <Font name="System Bold" size="18.0" />
-         </font>
-      </Label>
-      <Label fx:id="AvailableDeviceId1" layoutX="34.0" layoutY="167.0" text="Device Info:">
-         <font>
-            <Font size="22.0" />
          </font>
       </Label>
    </children>

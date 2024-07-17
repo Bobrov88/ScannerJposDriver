@@ -6,12 +6,14 @@ import javafx.beans.property.StringProperty;
 import jpos.JposConst;
 import jpos.JposException;
 import jpos.events.DataEvent;
+import jpos.events.ErrorEvent;
 import jpos.services.EventCallbacks;
 import jpos.services.ScannerService114;
 import jssc.*;
 import org.apache.log4j.Logger;
 import Logger.MyLogger;
 
+import javax.xml.crypto.Data;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Arrays;
@@ -28,6 +30,11 @@ public class ScannerService implements ScannerService114 {
     private boolean deviceEnable = false; // TODO static
     private boolean claimed = false; // TODO static
     private SerialPort serialPort; // TODO static
+    private int powerNotify = 0;
+    private boolean autoDisable = false;
+    private boolean dataEventEnabled = false;
+    private boolean decodeData = false;
+    private boolean freezeEvents = false;
 
     public void setComPortNumber(int comPort) throws JposException {
         logger.info("Setting comport to " + comPort);
@@ -37,19 +44,29 @@ public class ScannerService implements ScannerService114 {
             throw new JposException(JposConst.JPOS_E_FAILURE, "Invalid comm port number");
         }
     }
+
     public void setScannedBarcode(String receivedData) {
         scannedBarcode.set(receivedData);
     }
+
     public StringProperty scannedBarcodeProperty() {
         return scannedBarcode;
     }
+
     public int getComPortNumber() {
         return this.comPort;
     }
+
     @Override
     public void clearInputProperties() throws JposException {
-
+        if (this.deviceEnable) {
+            dataEvent = null;
+            receivedData = null;
+        } else {
+            throw new JposException(JposConst.JPOS_E_CLOSED, "Device disable");
+        }
     }
+
     @Override
     public boolean getCapCompareFirmwareVersion() throws JposException {
         return false;
@@ -62,12 +79,12 @@ public class ScannerService implements ScannerService114 {
 
     @Override
     public void compareFirmwareVersion(String s, int[] ints) throws JposException {
-
+        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Method is not supported by this service");
     }
 
     @Override
     public void updateFirmware(String s) throws JposException {
-
+        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Please, use the included utility");
     }
 
     @Override
@@ -82,22 +99,21 @@ public class ScannerService implements ScannerService114 {
 
     @Override
     public void resetStatistics(String s) throws JposException {
-
+        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Method is not supported by this service");
     }
 
     @Override
     public void retrieveStatistics(String[] strings) throws JposException {
-
+        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Method is not supported by this service");
     }
 
     @Override
     public void updateStatistics(String s) throws JposException {
-
+        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Method is not supported by this service");
     }
 
     @Override
     public void deleteInstance() throws JposException {
-
     }
 
     @Override
@@ -107,27 +123,27 @@ public class ScannerService implements ScannerService114 {
 
     @Override
     public int getPowerNotify() throws JposException {
-        return 0;
+        return this.powerNotify;
     }
 
     @Override
     public void setPowerNotify(int i) throws JposException {
-
+        this.powerNotify = i;
     }
 
     @Override
     public int getPowerState() throws JposException {
-        return 0;
+        return 2000;
     }
 
     @Override
     public boolean getAutoDisable() throws JposException {
-        return false;
+        return autoDisable;
     }
 
     @Override
     public void setAutoDisable(boolean b) throws JposException {
-
+        this.autoDisable = b;
     }
 
     @Override
@@ -137,22 +153,22 @@ public class ScannerService implements ScannerService114 {
 
     @Override
     public boolean getDataEventEnabled() throws JposException {
-        return false;
+        return dataEventEnabled;
     }
 
     @Override
     public void setDataEventEnabled(boolean b) throws JposException {
-
+        this.dataEventEnabled = b;
     }
 
     @Override
     public boolean getDecodeData() throws JposException {
-        return false;
+        return this.decodeData;
     }
 
     @Override
     public void setDecodeData(boolean b) throws JposException {
-
+        this.decodeData = b;
     }
 
     @Override
@@ -172,11 +188,12 @@ public class ScannerService implements ScannerService114 {
 
     @Override
     public void clearInput() throws JposException {
+        this.clearInputProperties();
     }
 
     @Override
     public String getCheckHealthText() throws JposException {
-        return null;
+        return "Method is not supported by this service";
     }
 
     @Override
@@ -215,12 +232,12 @@ public class ScannerService implements ScannerService114 {
 
     @Override
     public boolean getFreezeEvents() throws JposException {
-        return false;
+        return this.freezeEvents;
     }
 
     @Override
     public void setFreezeEvents(boolean b) throws JposException {
-
+        this.freezeEvents = b;
     }
 
     @Override
@@ -323,8 +340,12 @@ public class ScannerService implements ScannerService114 {
                         logger.debug("Data: " + str);
                         setScannedBarcode(str.toString());
                         receivedData = str.toString().getBytes(StandardCharsets.UTF_8);
+                        if (callBack != null)
+                            callBack.fireDataEvent(new DataEvent(this, 0));
                     }
                 } catch (SerialPortException e) {
+                    if (callBack != null)
+                        callBack.fireErrorEvent(new ErrorEvent(this, JposConst.JPOS_E_EXTENDED, 0, 0, 0));
                     throw new RuntimeException(e);
                 }
             }
