@@ -64,13 +64,17 @@ public class MainWindowController {
             String deviceName = DeviceListId.getValue();
             logger.debug("OpenId with device: " + deviceName);
             JposEntry jposEntry = getJposEntryByLogicalName(deviceName);
-            try {
-                ScannerInstanceFactory scanner = new ScannerInstanceFactory();
-                scannerService = (ScannerService) scanner.createInstance("", jposEntry);
-                scannerService.open(deviceName, null);
-            } catch (JposException e) {
-                logger.fatal(e.getMessage());
-                throw new RuntimeException(e);
+            if (jposEntry != null) {
+                try {
+                    ScannerInstanceFactory scanner = new ScannerInstanceFactory();
+                    scannerService = (ScannerService) scanner.createInstance("", jposEntry);
+                    scannerService.open(deviceName, null);
+                } catch (JposException e) {
+                    logger.fatal(e.getMessage());
+                    throw new RuntimeException(e);
+                }
+            } else {
+                throw new RuntimeException("Jpos Entry is null");
             }
             deviceLists.get(deviceName).onOpenClicked();
             setButtonsVisibility(deviceName);
@@ -106,6 +110,7 @@ public class MainWindowController {
         CloseID.setOnAction(event -> {
             logger.debug("Closing");
             try {
+                scannerService.setScannedBarcode("");
                 scannerService.close();
             } catch (JposException e) {
                 logger.fatal(e.getMessage());
@@ -114,7 +119,6 @@ public class MainWindowController {
             String deviceName = DeviceListId.getValue();
             deviceLists.get(deviceName).onCloseClicked();
             setButtonsVisibility(deviceName);
-            ScannedDataTextAreaID.clear();
         });
     }
     void setButtonsVisibility(String chosenDevice) {

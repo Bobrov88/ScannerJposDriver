@@ -8,13 +8,12 @@ import jpos.JposException;
 import jpos.events.DataEvent;
 import jpos.services.EventCallbacks;
 import jpos.services.ScannerService114;
+import jssc.*;
 import org.apache.log4j.Logger;
-import jssc.SerialPort;
-import jssc.SerialPortEvent;
-import jssc.SerialPortEventListener;
-import jssc.SerialPortException;
 import Logger.MyLogger;
 
+import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.util.Arrays;
 
 public class ScannerService implements ScannerService114 {
@@ -38,8 +37,8 @@ public class ScannerService implements ScannerService114 {
             throw new JposException(JposConst.JPOS_E_FAILURE, "Invalid comm port number");
         }
     }
-    private void setScannedBarcode(byte[] bytes) {
-        scannedBarcode.set(Arrays.toString(bytes));
+    public void setScannedBarcode(String receivedData) {
+        scannedBarcode.set(receivedData);
     }
     public StringProperty scannedBarcodeProperty() {
         return scannedBarcode;
@@ -47,12 +46,10 @@ public class ScannerService implements ScannerService114 {
     public int getComPortNumber() {
         return this.comPort;
     }
-
     @Override
     public void clearInputProperties() throws JposException {
 
     }
-
     @Override
     public boolean getCapCompareFirmwareVersion() throws JposException {
         return false;
@@ -199,7 +196,16 @@ public class ScannerService implements ScannerService114 {
 
     @Override
     public String getDeviceServiceDescription() throws JposException {
-        return null;
+        if (serialPort.isOpened() && deviceEnable) {
+            try {
+                serialPort.writeBytes(SendBytes.GET_DEVICE_INFO);
+            } catch (SerialPortException e) {
+                throw new RuntimeException(e);
+            }
+            return Arrays.toString(this.getScanData());
+        } else {
+            return "Make sure the port is open or device is enabled";
+        }
     }
 
     @Override
@@ -277,7 +283,7 @@ public class ScannerService implements ScannerService114 {
                 logger.debug("Serial port opened");
             serialPort.setParams(SerialPort.BAUDRATE_9600, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
             // TODO get from jpos.xml
-            serialPort.addEventListener(new PortReader());
+            serialPort.addEventListener(new PortReader(), SerialPort.MASK_RXCHAR);
         } catch (SerialPortException e) {
             logger.fatal(e.getMessage());
             throw new RuntimeException(e);
@@ -299,13 +305,25 @@ public class ScannerService implements ScannerService114 {
     private class PortReader implements SerialPortEventListener {
         @Override
         public void serialEvent(SerialPortEvent event) {
-            if (event.isRXCHAR()) {
+            if (event.isRXCHAR() && event.getEventValue() > 0) {
                 try {
-                    byte[] tmp = serialPort.readBytes(event.getEventValue());
-                    if (tmp != null)
-                        receivedData = tmp;
-                    logger.debug("Data: " + Arrays.toString(receivedData));
-                    setScannedBarcode(receivedData);
+                    if (serialPort.isOpened() && deviceEnable) {
+                        String tempStr = "";
+                        StringBuilder str = new StringBuilder();
+                        while (true) {
+                            try {
+                                tempStr = serialPort.readString(event.getEventValue(), 100);
+                            } catch (SerialPortTimeoutException e) {
+                                break;
+                            }
+                            if (tempStr.charAt(0) == 13) break;
+                            str.append(tempStr);
+                            tempStr = "";
+                        }
+                        logger.debug("Data: " + str);
+                        setScannedBarcode(str.toString());
+                        receivedData = str.toString().getBytes(StandardCharsets.UTF_8);
+                    }
                 } catch (SerialPortException e) {
                     throw new RuntimeException(e);
                 }
