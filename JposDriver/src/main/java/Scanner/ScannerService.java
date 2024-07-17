@@ -13,9 +13,7 @@ import jssc.*;
 import org.apache.log4j.Logger;
 import Logger.MyLogger;
 
-import javax.xml.crypto.Data;
 import java.nio.charset.StandardCharsets;
-import java.security.SecureRandom;
 import java.util.Arrays;
 
 public class ScannerService implements ScannerService114 {
@@ -27,14 +25,16 @@ public class ScannerService implements ScannerService114 {
     private DataEvent dataEvent = null;
     private byte[] receivedData;
     private final StringProperty scannedBarcode = new SimpleStringProperty("");
-    private boolean deviceEnable = false; // TODO static
-    private boolean claimed = false; // TODO static
-    private SerialPort serialPort; // TODO static
+    private boolean deviceEnable = false;
+    private boolean claimed = false;
+    private SerialPort serialPort;
     private int powerNotify = 0;
     private boolean autoDisable = false;
     private boolean dataEventEnabled = false;
     private boolean decodeData = false;
     private boolean freezeEvents = false;
+    private String physicalDeviceDescription = "";
+    private String physicalDeviceName = "";
 
     public void setComPortNumber(int comPort) throws JposException {
         logger.info("Setting comport to " + comPort);
@@ -227,7 +227,7 @@ public class ScannerService implements ScannerService114 {
 
     @Override
     public int getDeviceServiceVersion() throws JposException {
-        return 0;
+        return 1014000;
     }
 
     @Override
@@ -242,12 +242,20 @@ public class ScannerService implements ScannerService114 {
 
     @Override
     public String getPhysicalDeviceDescription() throws JposException {
-        return null;
+        return this.physicalDeviceDescription;
+    }
+
+    public void setPhysicalDeviceDescription(String physicalDeviceDescription) throws JposException {
+        this.physicalDeviceDescription = physicalDeviceDescription;
     }
 
     @Override
     public String getPhysicalDeviceName() throws JposException {
-        return null;
+        return physicalDeviceName;
+    }
+
+    public void setPhysicalDeviceName(String physicalDeviceName) throws JposException {
+        this.physicalDeviceName = physicalDeviceName;
     }
 
     @Override
@@ -282,12 +290,12 @@ public class ScannerService implements ScannerService114 {
 
     @Override
     public void checkHealth(int i) throws JposException {
-
+        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Method is not supported by this service");
     }
 
     @Override
     public void directIO(int i, int[] ints, Object o) throws JposException {
-
+        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Method is not supported by this service");
     }
 
     @Override

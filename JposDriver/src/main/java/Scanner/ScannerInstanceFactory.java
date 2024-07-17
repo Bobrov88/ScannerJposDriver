@@ -27,18 +27,31 @@ public final class ScannerInstanceFactory implements JposServiceInstanceFactory 
             throw new JposException(JposConst.JPOS_E_NOSERVICE,
                     "The JposEntry does not contain the 'portName' property");
         }
-
-        int comport = -1;
+        if (!(paramJposEntry.hasPropertyWithName("productDescription"))) {
+            logger.fatal("The JposEntry does not contain the 'productDescription' property");
+            throw new JposException(JposConst.JPOS_E_NOSERVICE,
+                    "The JposEntry does not contain the 'productDescription' property");
+        }
+        if (!(paramJposEntry.hasPropertyWithName("productName"))) {
+            logger.fatal("The JposEntry does not contain the 'productName' property");
+            throw new JposException(JposConst.JPOS_E_NOSERVICE,
+                    "The JposEntry does not contain the 'productName' property");
+        }
         Prop lCommPortNumberProp = paramJposEntry.getProp("portName");
-        comport = Integer.parseInt(lCommPortNumberProp
-                .getValueAsString());
+        Prop physicalDeviceDescriptionProp = paramJposEntry.getProp("productDescription");
+        Prop physicalDeviceNameProp = paramJposEntry.getProp("productName");
+        int comport = Integer.parseInt(lCommPortNumberProp.getValueAsString());
+        String physicalDeviceDescription = physicalDeviceDescriptionProp.getValueAsString();
+        String physicalDeviceName = physicalDeviceNameProp.getValueAsString();
 
         ScannerService localJposServiceInstance = null;
         try {
             localJposServiceInstance = new ScannerService();
             localJposServiceInstance.setComPortNumber(comport);
+            localJposServiceInstance.setPhysicalDeviceDescription(physicalDeviceDescription);
+            localJposServiceInstance.setPhysicalDeviceName(physicalDeviceName);
         } catch (Exception localException) {
-            logger.fatal("Connection to port: " + comport + " failed");
+            logger.fatal(localException.toString());
             throw new JposException(jpos.JposConst.JPOS_E_NOSERVICE,
                     "Could not create the service instance!", localException);
         }
