@@ -13,6 +13,7 @@ import jssc.*;
 import org.apache.log4j.Logger;
 import Logger.MyLogger;
 
+import java.io.Serial;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
@@ -35,6 +36,10 @@ public class ScannerService implements ScannerService114 {
     private boolean freezeEvents = false;
     private String physicalDeviceDescription = "";
     private String physicalDeviceName = "";
+    private int baudRate = SerialPort.BAUDRATE_9600;
+    private int dataBits = SerialPort.DATABITS_8;
+    private int stopBits = SerialPort.STOPBITS_1;
+    private int parity = SerialPort.PARITY_NONE;
 
     public void setComPortNumber(int comPort) throws JposException {
         logger.info("Setting comport to " + comPort);
@@ -44,17 +49,15 @@ public class ScannerService implements ScannerService114 {
             throw new JposException(JposConst.JPOS_E_FAILURE, "Invalid comm port number");
         }
     }
-
+    public int getComPortNumber() {
+        return this.comPort;
+    }
     public void setScannedBarcode(String receivedData) {
         scannedBarcode.set(receivedData);
     }
 
     public StringProperty scannedBarcodeProperty() {
         return scannedBarcode;
-    }
-
-    public int getComPortNumber() {
-        return this.comPort;
     }
 
     @Override
@@ -325,6 +328,69 @@ public class ScannerService implements ScannerService114 {
             return;
         this.claimed = false;
         this.state = JposConst.JPOS_S_IDLE;
+    }
+    public void setStopBits(int stopBits) {
+        switch (stopBits) {
+            case 1:
+                this.stopBits = SerialPort.STOPBITS_1;
+            case 2:
+                this.stopBits = SerialPort.STOPBITS_2;
+            case 3:
+                this.stopBits = SerialPort.STOPBITS_1_5;
+            default:
+                this.stopBits = SerialPort.STOPBITS_1;
+        }
+    }
+
+    public void setParity(String parity) {
+        switch (parity) {
+            case "Odd":
+                this.parity = SerialPort.PARITY_ODD;
+            case "Even":
+                this.parity = SerialPort.PARITY_EVEN;
+            case "Space":
+                this.parity = SerialPort.PARITY_SPACE;
+            case "Mark":
+                this.parity = SerialPort.PARITY_MARK;
+            case "None":
+                this.parity = SerialPort.PARITY_NONE;
+            default:
+                this.parity = SerialPort.PARITY_NONE;
+        }
+    }
+
+    public void setDataBits(int dataBits) {
+        switch (dataBits) {
+            case 5:
+                this.dataBits = SerialPort.DATABITS_5;
+            case 6:
+                this.dataBits = SerialPort.DATABITS_6;
+            case 7:
+                this.dataBits = SerialPort.DATABITS_7;
+            case 8:
+                this.dataBits = SerialPort.DATABITS_8;
+            default:
+                this.dataBits = SerialPort.DATABITS_8;
+        }
+    }
+
+    public void setBaudRate(int baudRate) {
+        switch (baudRate) {
+            case 9600:
+                this.baudRate = SerialPort.BAUDRATE_9600;
+            case 14400:
+                this.baudRate = SerialPort.BAUDRATE_14400;
+            case 19200:
+                this.baudRate = SerialPort.BAUDRATE_19200;
+            case 38400:
+                this.baudRate = SerialPort.BAUDRATE_38400;
+            case 57600:
+                this.baudRate = SerialPort.BAUDRATE_57600;
+            case 115200:
+                this.baudRate = SerialPort.BAUDRATE_115200;
+            default:
+                this.baudRate = SerialPort.BAUDRATE_9600;
+        }
     }
 
     private class PortReader implements SerialPortEventListener {

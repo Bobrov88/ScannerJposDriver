@@ -23,6 +23,12 @@ import Scanner.ScannerService;
 
 public class MainWindowController {
     @FXML
+    public Button ShowDeviceInfoButtonId;
+    @FXML
+    public TextField DeviceInfoTextFieldId1;
+    @FXML
+    public Label TitleId;
+    @FXML
     private Label AvailableDeviceId;
     @FXML
     private Button ClaimID;
@@ -43,6 +49,10 @@ public class MainWindowController {
     private Label ScannedDataID;
     @FXML
     private TextField ScannedDataTextAreaID;
+    @FXML
+    private Button CopyDeviceInfoId;
+    @FXML
+    private Button CopyScannedId;
     private ScannerService scannerService;
     private Logger logger = MyLogger.createLoggerInstance(MainWindowController.class.getName());
     @FXML
@@ -105,6 +115,16 @@ public class MainWindowController {
             String deviceName = DeviceListId.getValue();
             deviceLists.get(deviceName).onReleaseClicked();
             setButtonsVisibility(deviceName);
+        });
+
+        ClearID.setOnAction(event -> {
+            logger.debug("Clearing");
+            scannerService.setScannedBarcode("");
+            try {
+                scannerService.clearInput();
+            } catch (JposException e) {
+                throw new RuntimeException(e);
+            }
         });
 
         CloseID.setOnAction(event -> {
