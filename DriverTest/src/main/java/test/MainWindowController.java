@@ -1,15 +1,17 @@
 package test;
 
 import javafx.collections.FXCollections;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
+import javafx.scene.control.*;
 import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.TextArea;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.AnchorPane;
-
 import java.util.*;
-
 import jpos.JposException;
 import jpos.config.JposEntry;
 import Logger.MyLogger;
@@ -17,7 +19,6 @@ import org.apache.log4j.Logger;
 
 import static test.Utility.extractLogicalName;
 import static test.Utility.getJposEntryByLogicalName;
-
 import Scanner.ScannerInstanceFactory;
 import Scanner.ScannerService;
 
@@ -25,9 +26,8 @@ public class MainWindowController {
     @FXML
     public Button ShowDeviceInfoButtonId;
     @FXML
-    public TextField DeviceInfoTextFieldId1;
-    @FXML
     public Label TitleId;
+    public ImageView LoadingId;
     @FXML
     private Label AvailableDeviceId;
     @FXML
@@ -48,13 +48,13 @@ public class MainWindowController {
     @FXML
     private Label ScannedDataID;
     @FXML
-    private TextField ScannedDataTextAreaID;
-    @FXML
-    private Button CopyDeviceInfoId;
+    private TextArea ScannedDataTextAreaID;
     @FXML
     private Button CopyScannedId;
+    @FXML
     private ScannerService scannerService;
     private Logger logger = MyLogger.createLoggerInstance(MainWindowController.class.getName());
+
     @FXML
     void initialize() {
         logger.debug("Initializing main window");
@@ -140,21 +140,70 @@ public class MainWindowController {
             deviceLists.get(deviceName).onCloseClicked();
             setButtonsVisibility(deviceName);
         });
+        CopyScannedId.setTooltip(new Tooltip("Copy to clipboard"));
+        CopyScannedId.setOnAction(event -> {
+            copyToClipboard(ScannedDataTextAreaID.getText());
+        });
+
+        ShowDeviceInfoButtonId.setOnAction(event -> {
+            LoadingId.setVisible(true);
+            Task<Void> task = new Task<Void>() {
+                @Override
+                protected Void call() throws Exception {
+                    try {
+                        scannerService.getDeviceInfo();
+                    } catch (jssc.SerialPortException | org.json.simple.parser.ParseException | JposException |
+                             InterruptedException e) {
+                        logger.fatal(e.getMessage());
+                        throw new RuntimeException(e);
+                    }
+                    return null;
+                }
+
+                @Override
+                protected void succeeded() {
+                    LoadingId.setVisible(false);
+                }
+
+                @Override
+                protected void failed() {
+                    LoadingId.setVisible(false);
+                }
+            };
+            Thread thread = new Thread(task);
+            thread.setDaemon(true);
+            thread.start();
+        });
     }
-    void setButtonsVisibility(String chosenDevice) {
+
+    private void setButtonsVisibility(String chosenDevice) {
         if (chosenDevice.compareTo("") == 0) {
             OpenID.setDisable(true);
             ClaimID.setDisable(true);
             ReleaseID.setDisable(true);
             CloseID.setDisable(true);
             ScannedDataTextAreaID.setDisable(true);
+            ShowDeviceInfoButtonId.setDisable(true);
+            CopyScannedId.setDisable(true);
+            ClearID.setDisable(true);
+            LoadingId.setVisible(false);
         } else {
             DeviceListState d = deviceLists.get(chosenDevice);
             OpenID.setDisable(d.isOpenDisable);
             ClaimID.setDisable(d.isClaimDisable);
             ReleaseID.setDisable(d.isReleaseDisable);
             CloseID.setDisable(d.isCloseDisable);
-            ScannedDataTextAreaID.setDisable(d.isScannedTextFiledDisable);
+            ScannedDataTextAreaID.setDisable(d.isScannedTextAreaDisable);
+            ShowDeviceInfoButtonId.setDisable(d.isShowDeviceInfoDisable);
+            CopyScannedId.setDisable(d.isCopyScannedDisable);
+            ClearID.setDisable(d.isClearDisable);
         }
+    }
+
+    public void copyToClipboard(String str) {
+        Clipboard clipboard = Clipboard.getSystemClipboard();
+        ClipboardContent clipboardContent = new ClipboardContent();
+        clipboardContent.putString(str);
+        clipboard.setContent(clipboardContent);
     }
 }

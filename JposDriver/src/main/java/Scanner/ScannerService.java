@@ -12,8 +12,10 @@ import jpos.services.ScannerService114;
 import jssc.*;
 import org.apache.log4j.Logger;
 import Logger.MyLogger;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
-import java.io.Serial;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
@@ -42,7 +44,6 @@ public class ScannerService implements ScannerService114 {
     private int parity = SerialPort.PARITY_NONE;
 
     public void setComPortNumber(int comPort) throws JposException {
-        logger.info("Setting comport to " + comPort);
         this.comPort = comPort;
         if (!(comPort > 0 && comPort < 255)) {
             logger.fatal("Port number < 1 or > 255. Connection refused!");
@@ -65,6 +66,7 @@ public class ScannerService implements ScannerService114 {
         if (this.deviceEnable) {
             dataEvent = null;
             receivedData = null;
+            setScannedBarcode("");
         } else {
             throw new JposException(JposConst.JPOS_E_CLOSED, "Device disable");
         }
@@ -307,11 +309,11 @@ public class ScannerService implements ScannerService114 {
         serialPort = new SerialPort("COM" + String.valueOf(comPort));
         try {
             serialPort.openPort();
-            if (serialPort.isOpened())
+            if (serialPort.isOpened()) {
                 logger.debug("Serial port opened");
-            serialPort.setParams(SerialPort.BAUDRATE_9600, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
-            // TODO get from jpos.xml
-            serialPort.addEventListener(new PortReader(), SerialPort.MASK_RXCHAR);
+                serialPort.setParams(baudRate, dataBits, stopBits, parity);
+                serialPort.addEventListener(new PortReader(), SerialPort.MASK_RXCHAR);
+            }
         } catch (SerialPortException e) {
             logger.fatal(e.getMessage());
             throw new RuntimeException(e);
@@ -393,12 +395,47 @@ public class ScannerService implements ScannerService114 {
         }
     }
 
+    public void getDeviceInfo() throws SerialPortException, ParseException, JposException, InterruptedException {
+        logger.debug("Getting device full info");
+        clearInput();
+        StringBuilder str = new StringBuilder();
+        if (serialPort.isOpened() && deviceEnable) {
+            serialPort.writeBytes(SendBytes.GET_CONFIG_01);
+        }
+        Thread.sleep(1000);
+        logger.debug(scannedBarcode.getValue());
+        Object obj = new JSONParser().parse(scannedBarcode.getValue());
+        JSONObject jsonObject = (JSONObject) obj;
+
+        String deviceName = (String) jsonObject.get("deviceName");
+        String deviceFID = (String) jsonObject.get("FID");
+        String deviceID = (String) jsonObject.get("deviceID");
+        str.append("Product name: ")
+                .append(deviceFID)
+                .append(System.getProperty("line.separator"))
+                .append("Model: ")
+                .append(deviceName)
+                .append(System.getProperty("line.separator"))
+                .append("Serial number: ")
+                .append(deviceID)
+                .append(System.getProperty("line.separator"));
+
+        if (serialPort.isOpened() && deviceEnable) {
+            serialPort.writeBytes(SendBytes.GET_DEVICE_INFO);
+        }
+        Thread.sleep(1000);
+        str.append(scannedBarcode.getValue());
+        this.setScannedBarcode(str.toString());
+        logger.info(str.toString());
+    }
+
     private class PortReader implements SerialPortEventListener {
         @Override
         public void serialEvent(SerialPortEvent event) {
             if (event.isRXCHAR() && event.getEventValue() > 0) {
                 try {
                     if (serialPort.isOpened() && deviceEnable) {
+                        clearInput();
                         String tempStr = "";
                         StringBuilder str = new StringBuilder();
                         while (true) {
@@ -420,6 +457,8 @@ public class ScannerService implements ScannerService114 {
                 } catch (SerialPortException e) {
                     if (callBack != null)
                         callBack.fireErrorEvent(new ErrorEvent(this, JposConst.JPOS_E_EXTENDED, 0, 0, 0));
+                    throw new RuntimeException(e);
+                } catch (JposException e) {
                     throw new RuntimeException(e);
                 }
             }

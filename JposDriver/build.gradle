@@ -13,6 +13,7 @@ dependencies {
     implementation files('../libs/jpos1141.jar')
     implementation files('../libs/log4j-1.2.17.jar')
     implementation files('../libs/jssc-2.9.6.jar')
+    implementation files('../libs/json-simple-1.1.1.jar')
 }
 
 jar {

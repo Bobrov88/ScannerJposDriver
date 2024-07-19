@@ -42,6 +42,7 @@ set classpath=%classpath%;xerces.jar
 set classpath=%classpath%;jssc-2.9.6.jar
 set classpath=%classpath%;JposDriver.jar
 set classpath=%classpath%;log4j-1.2.17.jar
+set classpath=%classpath%;json-simple-1.1.1.jar
 set classpath=%classpath%;"%cd%"\
 set classpath=%classpath%;"%cd%"\jpos\jpos114-controls.jar
 
