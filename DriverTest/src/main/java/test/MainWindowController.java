@@ -147,6 +147,8 @@ public class MainWindowController {
 
         ShowDeviceInfoButtonId.setOnAction(event -> {
             LoadingId.setVisible(true);
+            ScannedDataTextAreaID.textProperty().unbind();
+            ScannedDataTextAreaID.setDisable(true);
             Task<Void> task = new Task<Void>() {
                 @Override
                 protected Void call() throws Exception {
@@ -163,11 +165,13 @@ public class MainWindowController {
                 @Override
                 protected void succeeded() {
                     LoadingId.setVisible(false);
+                    ScannedDataTextAreaID.setDisable(false);
+                    ScannedDataTextAreaID.textProperty().bind(scannerService.scannedBarcodeProperty());
                 }
 
                 @Override
                 protected void failed() {
-                    LoadingId.setVisible(false);
+                    succeeded();
                 }
             };
             Thread thread = new Thread(task);
