@@ -1,5 +1,6 @@
 package test;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -64,120 +65,126 @@ public class MainWindowController {
             deviceLists.put(deviceName, new DeviceListState());
         }
         DeviceListId.setItems(FXCollections.observableArrayList(deviceLists.keySet()));
-        DeviceListId.setValue("Choose device");
+        if (!deviceLists.isEmpty()) {
+            DeviceListId.setValue("Choose device");
 
-        DeviceListId.setOnAction(event -> {
-            setButtonsVisibility(DeviceListId.getValue());
-        });
+            DeviceListId.setOnAction(event -> {
+                setButtonsVisibility(DeviceListId.getValue());
+            });
 
-        OpenID.setOnAction(event -> {
-            String deviceName = DeviceListId.getValue();
-            logger.debug("OpenId with device: " + deviceName);
-            JposEntry jposEntry = getJposEntryByLogicalName(deviceName);
-            if (jposEntry != null) {
+            OpenID.setOnAction(event -> {
+                String deviceName = DeviceListId.getValue();
+                logger.debug("OpenId with device: " + deviceName);
+                JposEntry jposEntry = getJposEntryByLogicalName(deviceName);
+                if (jposEntry != null) {
+                    try {
+                        ScannerInstanceFactory scanner = new ScannerInstanceFactory();
+                        scannerService = (ScannerService) scanner.createInstance("", jposEntry);
+                        scannerService.open(deviceName, null);
+                        deviceLists.get(deviceName).onOpenClicked();
+                        setButtonsVisibility(deviceName);
+                        ScannedDataTextAreaID.textProperty().bind(scannerService.scannedBarcodeProperty());
+                    } catch (JposException e) {
+                        logger.fatal(e.getMessage());
+                        showErrorWindow(e.getMessage());
+                    }
+                } else {
+                    String message ="JposEntry is null. Please, check xml syntax or entry's data!";
+                    logger.fatal(message);
+                    showErrorWindow(message);
+                }
+            });
+
+            ClaimID.setOnAction(event -> {
+                logger.debug("Claiming");
                 try {
-                    ScannerInstanceFactory scanner = new ScannerInstanceFactory();
-                    scannerService = (ScannerService) scanner.createInstance("", jposEntry);
-                    scannerService.open(deviceName, null);
+                    scannerService.claim(1000);
                 } catch (JposException e) {
                     logger.fatal(e.getMessage());
                     throw new RuntimeException(e);
                 }
-            } else {
-                throw new RuntimeException("Jpos Entry is null");
-            }
-            deviceLists.get(deviceName).onOpenClicked();
-            setButtonsVisibility(deviceName);
-            ScannedDataTextAreaID.textProperty().bind(scannerService.scannedBarcodeProperty());
-        });
+                String deviceName = DeviceListId.getValue();
+                deviceLists.get(deviceName).onClaimClicked();
+                setButtonsVisibility(deviceName);
+            });
 
-        ClaimID.setOnAction(event -> {
-            logger.debug("Claiming");
-            try {
-                scannerService.claim(1000);
-            } catch (JposException e) {
-                logger.fatal(e.getMessage());
-                throw new RuntimeException(e);
-            }
-            String deviceName = DeviceListId.getValue();
-            deviceLists.get(deviceName).onClaimClicked();
-            setButtonsVisibility(deviceName);
-        });
+            ReleaseID.setOnAction(event -> {
+                logger.debug("Releasing");
+                try {
+                    scannerService.release();
+                } catch (JposException e) {
+                    logger.fatal(e.getMessage());
+                    throw new RuntimeException(e);
+                }
+                String deviceName = DeviceListId.getValue();
+                deviceLists.get(deviceName).onReleaseClicked();
+                setButtonsVisibility(deviceName);
+            });
 
-        ReleaseID.setOnAction(event -> {
-            logger.debug("Releasing");
-            try {
-                scannerService.release();
-            } catch (JposException e) {
-                logger.fatal(e.getMessage());
-                throw new RuntimeException(e);
-            }
-            String deviceName = DeviceListId.getValue();
-            deviceLists.get(deviceName).onReleaseClicked();
-            setButtonsVisibility(deviceName);
-        });
-
-        ClearID.setOnAction(event -> {
-            logger.debug("Clearing");
-            scannerService.setScannedBarcode("");
-            try {
-                scannerService.clearInput();
-            } catch (JposException e) {
-                throw new RuntimeException(e);
-            }
-        });
-
-        CloseID.setOnAction(event -> {
-            logger.debug("Closing");
-            try {
+            ClearID.setOnAction(event -> {
+                logger.debug("Clearing");
                 scannerService.setScannedBarcode("");
-                scannerService.close();
-            } catch (JposException e) {
-                logger.fatal(e.getMessage());
-                throw new RuntimeException(e);
-            }
-            String deviceName = DeviceListId.getValue();
-            deviceLists.get(deviceName).onCloseClicked();
-            setButtonsVisibility(deviceName);
-        });
-        CopyScannedId.setTooltip(new Tooltip("Copy to clipboard"));
-        CopyScannedId.setOnAction(event -> {
-            copyToClipboard(ScannedDataTextAreaID.getText());
-        });
+                try {
+                    scannerService.clearInput();
+                } catch (JposException e) {
+                    throw new RuntimeException(e);
+                }
+            });
 
-        ShowDeviceInfoButtonId.setOnAction(event -> {
-            LoadingId.setVisible(true);
-            ScannedDataTextAreaID.textProperty().unbind();
-            ScannedDataTextAreaID.setDisable(true);
-            Task<Void> task = new Task<Void>() {
-                @Override
-                protected Void call() throws Exception {
-                    try {
-                        scannerService.getDeviceInfo();
-                    } catch (jssc.SerialPortException | org.json.simple.parser.ParseException | JposException |
-                             InterruptedException e) {
-                        logger.fatal(e.getMessage());
-                        throw new RuntimeException(e);
+            CloseID.setOnAction(event -> {
+                logger.debug("Closing");
+                try {
+                    scannerService.setScannedBarcode("");
+                    scannerService.close();
+                } catch (JposException e) {
+                    logger.fatal(e.getMessage());
+                    throw new RuntimeException(e);
+                }
+                String deviceName = DeviceListId.getValue();
+                deviceLists.get(deviceName).onCloseClicked();
+                setButtonsVisibility(deviceName);
+            });
+            CopyScannedId.setTooltip(new Tooltip("Copy to clipboard"));
+            CopyScannedId.setOnAction(event -> {
+                copyToClipboard(ScannedDataTextAreaID.getText());
+            });
+
+            ShowDeviceInfoButtonId.setOnAction(event -> {
+                LoadingId.setVisible(true);
+                ScannedDataTextAreaID.textProperty().unbind();
+                ScannedDataTextAreaID.setDisable(true);
+                Task<Void> task = new Task<Void>() {
+                    @Override
+                    protected Void call() throws Exception {
+                        try {
+                            scannerService.getDeviceInfo();
+                        } catch (jssc.SerialPortException | org.json.simple.parser.ParseException | JposException |
+                                 InterruptedException e) {
+                            logger.fatal(e.getMessage());
+                            throw new RuntimeException(e);
+                        }
+                        return null;
                     }
-                    return null;
-                }
-
-                @Override
-                protected void succeeded() {
-                    LoadingId.setVisible(false);
-                    ScannedDataTextAreaID.setDisable(false);
-                    ScannedDataTextAreaID.textProperty().bind(scannerService.scannedBarcodeProperty());
-                }
-
-                @Override
-                protected void failed() {
-                    succeeded();
-                }
-            };
-            Thread thread = new Thread(task);
-            thread.setDaemon(true);
-            thread.start();
-        });
+                    @Override
+                    protected void succeeded() {
+                        LoadingId.setVisible(false);
+                        ScannedDataTextAreaID.setDisable(false);
+                        ScannedDataTextAreaID.textProperty().bind(scannerService.scannedBarcodeProperty());
+                    }
+                    @Override
+                    protected void failed() {
+                        succeeded();
+                    }
+                };
+                Thread thread = new Thread(task);
+                thread.setDaemon(true);
+                thread.start();
+            });
+        } else {
+            String message = "JposEntry not found or does not contain entries";
+            logger.fatal(message);
+            showErrorWindow(message);
+        }
     }
 
     private void setButtonsVisibility(String chosenDevice) {
@@ -209,5 +216,15 @@ public class MainWindowController {
         ClipboardContent clipboardContent = new ClipboardContent();
         clipboardContent.putString(str);
         clipboard.setContent(clipboardContent);
+    }
+
+    private void showErrorWindow(String message) {
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText(null);
+            alert.setContentText(message);
+            alert.showAndWait();
+        });
     }
 }

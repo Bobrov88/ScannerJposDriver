@@ -11,9 +11,11 @@ import org.apache.log4j.Logger;
 
 public final class ScannerInstanceFactory implements JposServiceInstanceFactory {
     private Logger logger = MyLogger.createLoggerInstance(ScannerInstanceFactory.class.getName());
+
     public ScannerInstanceFactory() {
         logger.info("ScannerInstanceFactory constructor called");
     }
+
     public JposServiceInstance createInstance(String paramString, JposEntry paramJposEntry) throws JposException {
         logger.debug("Creating instance of scanner");
 
@@ -66,16 +68,16 @@ public final class ScannerInstanceFactory implements JposServiceInstanceFactory 
         Prop physicalDeviceDescriptionProp = paramJposEntry.getProp("productDescription");
         Prop physicalDeviceNameProp = paramJposEntry.getProp("productName");
 
-        int comport = Integer.parseInt(comPortNumberProp.getValueAsString());
-        String physicalDeviceDescription = physicalDeviceDescriptionProp.getValueAsString();
-        String physicalDeviceName = physicalDeviceNameProp.getValueAsString();
-        int baudRate = Integer.parseInt(baudRateProp.getValueAsString());
-        int dataBits = Integer.parseInt(dataBitsProp.getValueAsString());
-        int stopBits = Integer.parseInt(stopBitsProp.getValueAsString());
-        String parity = parityProp.getValueAsString();
-
-        ScannerService localJposServiceInstance = null;
         try {
+            int comport = Integer.parseInt(comPortNumberProp.getValueAsString());
+            String physicalDeviceDescription = physicalDeviceDescriptionProp.getValueAsString();
+            String physicalDeviceName = physicalDeviceNameProp.getValueAsString();
+            int baudRate = Integer.parseInt(baudRateProp.getValueAsString());
+            int dataBits = Integer.parseInt(dataBitsProp.getValueAsString());
+            int stopBits = Integer.parseInt(stopBitsProp.getValueAsString());
+            String parity = parityProp.getValueAsString();
+
+            ScannerService localJposServiceInstance = null;
             localJposServiceInstance = new ScannerService();
             localJposServiceInstance.setComPortNumber(comport);
             localJposServiceInstance.setBaudRate(baudRate);
@@ -84,11 +86,11 @@ public final class ScannerInstanceFactory implements JposServiceInstanceFactory 
             localJposServiceInstance.setParity(parity);
             localJposServiceInstance.setPhysicalDeviceDescription(physicalDeviceDescription);
             localJposServiceInstance.setPhysicalDeviceName(physicalDeviceName);
+            return localJposServiceInstance;
         } catch (Exception localException) {
             logger.fatal(localException.toString());
             throw new JposException(jpos.JposConst.JPOS_E_NOSERVICE,
-                    "Could not create the service instance!", localException);
+                    localException.getMessage() + ". Please, check your jpos.xml param values", localException);
         }
-        return localJposServiceInstance;
     }
 }

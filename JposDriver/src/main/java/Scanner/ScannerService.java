@@ -47,12 +47,14 @@ public class ScannerService implements ScannerService114 {
         this.comPort = comPort;
         if (!(comPort > 0 && comPort < 255)) {
             logger.fatal("Port number < 1 or > 255. Connection refused!");
-            throw new JposException(JposConst.JPOS_E_FAILURE, "Invalid comm port number");
+            throw new JposException(JposConst.JPOS_E_FAILURE, "Invalid com port number");
         }
     }
+
     public int getComPortNumber() {
         return this.comPort;
     }
+
     public void setScannedBarcode(String receivedData) {
         scannedBarcode.set(receivedData);
     }
@@ -74,12 +76,12 @@ public class ScannerService implements ScannerService114 {
 
     @Override
     public boolean getCapCompareFirmwareVersion() throws JposException {
-        return false;
+        throw new JposException(JposConst.JPOS_E_ILLEGAL, "To update the firmware, please use the included utility.");
     }
 
     @Override
     public boolean getCapUpdateFirmware() throws JposException {
-        return false;
+        throw new JposException(JposConst.JPOS_E_ILLEGAL, "To update the firmware, please use the included utility.");
     }
 
     @Override
@@ -89,17 +91,17 @@ public class ScannerService implements ScannerService114 {
 
     @Override
     public void updateFirmware(String s) throws JposException {
-        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Please, use the included utility");
+        throw new JposException(JposConst.JPOS_E_ILLEGAL, "To update the firmware, please use the included utility.");
     }
 
     @Override
     public boolean getCapStatisticsReporting() throws JposException {
-        return false;
+        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Method is not supported by this service");
     }
 
     @Override
     public boolean getCapUpdateStatistics() throws JposException {
-        return false;
+        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Method is not supported by this service");
     }
 
     @Override
@@ -123,7 +125,7 @@ public class ScannerService implements ScannerService114 {
 
     @Override
     public int getCapPowerReporting() throws JposException {
-        return 0;
+        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Method is not supported by this service");
     }
 
     @Override
@@ -198,7 +200,7 @@ public class ScannerService implements ScannerService114 {
 
     @Override
     public String getCheckHealthText() throws JposException {
-        return "Method is not supported by this service";
+        throw new JposException(JposConst.JPOS_E_ILLEGAL, "Method is not supported by this service");
     }
 
     @Override
@@ -226,7 +228,7 @@ public class ScannerService implements ScannerService114 {
             }
             return Arrays.toString(this.getScanData());
         } else {
-            return "Make sure the port is open or device is enabled";
+            throw new JposException(JposConst.JPOS_E_ILLEGAL, "Device is not enable. Please, check if service instance is created or port is opened!");
         }
     }
 
@@ -306,21 +308,21 @@ public class ScannerService implements ScannerService114 {
     @Override
     public void open(String logicalName, EventCallbacks eventCallbacks) throws JposException {
         logger.debug("Opening " + logicalName + ": COM" + String.valueOf(comPort));
-        serialPort = new SerialPort("COM" + String.valueOf(comPort));
         try {
+            serialPort = new SerialPort("COM" + String.valueOf(comPort));
             serialPort.openPort();
             if (serialPort.isOpened()) {
                 logger.debug("Serial port opened");
                 serialPort.setParams(baudRate, dataBits, stopBits, parity);
                 serialPort.addEventListener(new PortReader(), SerialPort.MASK_RXCHAR);
+                state = JposConst.JPOS_S_IDLE;
+                this.callBack = eventCallbacks;
+                this.deviceEnable = true;
             }
         } catch (SerialPortException e) {
             logger.fatal(e.getMessage());
-            throw new RuntimeException(e);
+            throw new RuntimeException(e.getMessage());
         }
-        state = JposConst.JPOS_S_IDLE;
-        this.callBack = eventCallbacks;
-        this.deviceEnable = true;
     }
 
     @Override
@@ -331,6 +333,7 @@ public class ScannerService implements ScannerService114 {
         this.claimed = false;
         this.state = JposConst.JPOS_S_IDLE;
     }
+
     public void setStopBits(int stopBits) {
         switch (stopBits) {
             case 1:
