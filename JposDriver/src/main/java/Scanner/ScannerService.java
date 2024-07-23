@@ -44,11 +44,11 @@ public class ScannerService implements ScannerService114 {
     private int parity = SerialPort.PARITY_NONE;
 
     public void setComPortNumber(String comPort) throws JposException {
-        this.comPort = comPort;
         if (comPort.isEmpty()) {
             logger.fatal("Port name is empty. Connection refused!");
             throw new JposException(JposConst.JPOS_E_FAILURE, "Invalid com port number");
         }
+        this.comPort = comPort;
     }
 
     public String getComPortNumber() {
