@@ -307,9 +307,9 @@ public class ScannerService implements ScannerService114 {
 
     @Override
     public void open(String logicalName, EventCallbacks eventCallbacks) throws JposException {
-        logger.debug("Opening " + logicalName + ": comPort");
+        logger.debug("Opening " + logicalName + "with comPort" + this.comPort);
         try {
-            serialPort = new SerialPort(comPort);
+            serialPort = new SerialPort(this.comPort);
             serialPort.openPort();
             if (serialPort.isOpened()) {
                 logger.debug("Serial port opened");
