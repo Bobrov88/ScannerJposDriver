@@ -18,13 +18,11 @@ import org.json.simple.parser.ParseException;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.Permission;
 import java.util.Arrays;
-import java.util.Objects;
 
 public class ScannerService implements ScannerService114 {
     private final Logger logger = MyLogger.createLoggerInstance(ScannerService.class.getName());
-    private String comPort = "/dev/ttyACM0";
+    private String comPort = "";
     private int state = JposConst.JPOS_S_CLOSED;
     private int timeout = -1;
     private EventCallbacks callBack = null;
@@ -321,20 +319,12 @@ public class ScannerService implements ScannerService114 {
                 state = JposConst.JPOS_S_IDLE;
                 this.callBack = eventCallbacks;
                 this.deviceEnable = true;
+            } else {
+                throw new IOException("Port not found or permission denied!");
             }
-        } catch (SerialPortException e) {
-            if (Objects.equals(e.getExceptionType(), SerialPortException.TYPE_PORT_BUSY)) {
-                logger.fatal("Port " + this.comPort + " is busy");
-                throw new RuntimeException(e.getMessage());
-            }
-            if (Objects.equals(e.getExceptionType(), SerialPortException.TYPE_PORT_NOT_FOUND)) {
-                logger.fatal("Port " + this.comPort + " not found");
-                throw new RuntimeException(e.getMessage());
-            }
-            if (Objects.equals(e.getExceptionType(), SerialPortException.TYPE_PERMISSION_DENIED)) {
-                logger.fatal("Permission denied. You have no right to use comport. Use console command: 'chmod 777 .\\launcher.sh')");
-                throw new RuntimeException(e.getMessage());
-            }
+        } catch (SerialPortException | IOException e) {
+            logger.fatal(e.getMessage());
+            throw new RuntimeException(e.getMessage());
         }
     }
 
@@ -428,13 +418,13 @@ public class ScannerService implements ScannerService114 {
         String deviceID = (String) jsonObject.get("deviceID");
         str.append("Product name: ")
                 .append(deviceFID)
-                .append(System.getProperty("line.separator"))
+                .append(System.lineSeparator())
                 .append("Model: ")
                 .append(deviceName)
-                .append(System.getProperty("line.separator"))
+                .append(System.lineSeparator())
                 .append("Serial number: ")
                 .append(deviceID)
-                .append(System.getProperty("line.separator"));
+                .append(System.lineSeparator());
 
         if (serialPort.isOpened() && deviceEnable) {
             serialPort.writeBytes(SendBytes.GET_DEVICE_INFO);

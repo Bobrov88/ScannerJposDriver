@@ -8,7 +8,7 @@
         <vendor name="QM" url="https://neokkt.com/neo_fox_sd"/>
         <jpos category="Scanner" version="1.14"/>
         <product description="Handheld corded scanner" name="Neo Fox SD QM" url="https://neokkt.com/neo_fox_sd"/>
-        <prop name="portName" type="String" value="3"/>
+        <prop name="portName" type="String" value="/dev/ttyACM0"/>
         <prop name="baudRate" type="String" value="9600"/>
         <prop name="dataBits" type="String" value="8"/>
         <prop name="stopBits" type="String" value="1"/>
@@ -22,6 +22,8 @@
         <product description="Handheld corded scanner" name="Neo Fox SD QM" url="https://neokkt.com/neo_fox_sd"/>
         <prop name="portName" type="String" value="5"/>
         <prop name="baudRate" type="String" value="9600"/>
-        <prop name="dataSuffix" type="String" value=""/>
+        <prop name="dataBits" type="String" value="8"/>
+        <prop name="stopBits" type="String" value="1"/>
+        <prop name="parity" type="String" value="None"/>
     </JposEntry>
 </JposEntries>

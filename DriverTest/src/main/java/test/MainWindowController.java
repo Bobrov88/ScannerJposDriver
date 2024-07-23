@@ -84,7 +84,7 @@ public class MainWindowController {
                         deviceLists.get(deviceName).onOpenClicked();
                         setButtonsVisibility(deviceName);
                         ScannedDataTextAreaID.textProperty().bind(scannerService.scannedBarcodeProperty());
-                    } catch (JposException e) {
+                    } catch (JposException | RuntimeException e) {
                         logger.fatal(e.getMessage());
                         showErrorWindow(e.getMessage());
                     }
@@ -181,7 +181,7 @@ public class MainWindowController {
                 thread.start();
             });
         } else {
-            String message = "JposEntry not found or does not contain entries";
+            String message = "Jpos.xml not found or does not contain entries";
             logger.fatal(message);
             showErrorWindow(message);
         }

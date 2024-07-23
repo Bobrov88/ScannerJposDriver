@@ -15,7 +15,6 @@ public class Utility {
         try {
             reg = new SimpleEntryRegistry(new SimpleXmlRegPopulator());
         } catch (Exception e) {
-            e.printStackTrace();
             throw new RuntimeException(e.toString());
         }
         reg.load();
