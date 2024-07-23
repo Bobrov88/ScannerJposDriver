@@ -16,8 +16,11 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.security.Permission;
 import java.util.Arrays;
+import java.util.Objects;
 
 public class ScannerService implements ScannerService114 {
     private final Logger logger = MyLogger.createLoggerInstance(ScannerService.class.getName());
@@ -307,7 +310,7 @@ public class ScannerService implements ScannerService114 {
 
     @Override
     public void open(String logicalName, EventCallbacks eventCallbacks) throws JposException {
-        logger.debug("Opening " + logicalName + "with comPort" + this.comPort);
+        logger.debug("Opening " + logicalName + " with comPort " + this.comPort);
         try {
             serialPort = new SerialPort(this.comPort);
             serialPort.openPort();
@@ -320,8 +323,18 @@ public class ScannerService implements ScannerService114 {
                 this.deviceEnable = true;
             }
         } catch (SerialPortException e) {
-            logger.fatal(e.getMessage());
-            throw new RuntimeException(e.getMessage());
+            if (Objects.equals(e.getExceptionType(), SerialPortException.TYPE_PORT_BUSY)) {
+                logger.fatal("Port " + this.comPort + " is busy");
+                throw new RuntimeException(e.getMessage());
+            }
+            if (Objects.equals(e.getExceptionType(), SerialPortException.TYPE_PORT_NOT_FOUND)) {
+                logger.fatal("Port " + this.comPort + " not found");
+                throw new RuntimeException(e.getMessage());
+            }
+            if (Objects.equals(e.getExceptionType(), SerialPortException.TYPE_PERMISSION_DENIED)) {
+                logger.fatal("Permission denied. You have no right to use comport. Use console command: 'chmod 777 .\\launcher.sh')");
+                throw new RuntimeException(e.getMessage());
+            }
         }
     }
 
