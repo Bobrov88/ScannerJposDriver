@@ -21,7 +21,7 @@ import java.util.Arrays;
 
 public class ScannerService implements ScannerService114 {
     private final Logger logger = MyLogger.createLoggerInstance(ScannerService.class.getName());
-    private int comPort = 1;
+    private String comPort = "/dev/ttyACM0";
     private int state = JposConst.JPOS_S_CLOSED;
     private int timeout = -1;
     private EventCallbacks callBack = null;
@@ -43,15 +43,15 @@ public class ScannerService implements ScannerService114 {
     private int stopBits = SerialPort.STOPBITS_1;
     private int parity = SerialPort.PARITY_NONE;
 
-    public void setComPortNumber(int comPort) throws JposException {
+    public void setComPortNumber(String comPort) throws JposException {
         this.comPort = comPort;
-        if (!(comPort > 0 && comPort < 255)) {
-            logger.fatal("Port number < 1 or > 255. Connection refused!");
+        if (!comPort.isEmpty()) {
+            logger.fatal("Port name is empty. Connection refused!");
             throw new JposException(JposConst.JPOS_E_FAILURE, "Invalid com port number");
         }
     }
 
-    public int getComPortNumber() {
+    public String getComPortNumber() {
         return this.comPort;
     }
 

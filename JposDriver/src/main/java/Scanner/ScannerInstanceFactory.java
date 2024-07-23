@@ -69,7 +69,7 @@ public final class ScannerInstanceFactory implements JposServiceInstanceFactory 
         Prop physicalDeviceNameProp = paramJposEntry.getProp("productName");
 
         try {
-            int comport = Integer.parseInt(comPortNumberProp.getValueAsString());
+            String comport = comPortNumberProp.getValueAsString();
             String physicalDeviceDescription = physicalDeviceDescriptionProp.getValueAsString();
             String physicalDeviceName = physicalDeviceNameProp.getValueAsString();
             int baudRate = Integer.parseInt(baudRateProp.getValueAsString());
