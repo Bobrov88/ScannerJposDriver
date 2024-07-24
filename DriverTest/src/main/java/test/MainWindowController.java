@@ -151,6 +151,8 @@ public class MainWindowController {
 
             ShowDeviceInfoButtonId.setOnAction(event -> {
                 LoadingId.setVisible(true);
+                scannerService.setScannedBarcode("");
+                ShowDeviceInfoButtonId.setDisable(true);
                 ScannedDataTextAreaID.textProperty().unbind();
                 ScannedDataTextAreaID.setDisable(true);
                 Task<Void> task = new Task<Void>() {
@@ -170,6 +172,7 @@ public class MainWindowController {
                         LoadingId.setVisible(false);
                         ScannedDataTextAreaID.setDisable(false);
                         ScannedDataTextAreaID.textProperty().bind(scannerService.scannedBarcodeProperty());
+                        ShowDeviceInfoButtonId.setDisable(false);
                     }
                     @Override
                     protected void failed() {

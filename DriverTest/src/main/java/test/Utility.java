@@ -1,6 +1,5 @@
 package test;
 
-import jpos.JposConst;
 import jpos.config.JposEntry;
 import jpos.config.simple.SimpleEntryRegistry;
 import jpos.config.simple.xml.SimpleXmlRegPopulator;
